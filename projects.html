@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mohammad Agha Mohammadi | Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="site-header">
+    <div class="container site-header-inner">
+      <a class="brand" href="./index.html">MAM</a>
+      <nav>
+        <a data-page="index.html" href="./index.html">Home</a>
+        <a data-page="experience.html" href="./experience.html">Experience</a>
+        <a data-page="coursework.html" href="./coursework.html">Coursework</a>
+        <a data-page="projects.html" href="./projects.html">Projects</a>
+        <a data-page="timeline.html" href="./timeline.html">Timeline</a>
+        <a data-page="events.html" href="./events.html">Events</a>
+        <a data-page="achievements.html" href="./achievements.html">Achievements</a>
+        <a data-page="contact.html" href="./contact.html">Contact</a>
+        <a data-page="login.html" href="./login.html">Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section panel reveal">
+      <h1 class="page-title">Key Projects & Technical Work</h1>
+      <p class="subtle">Full project documentation with detailed context, architecture, impact, and media.</p>
+      <div class="actions project-accordion-controls">
+        <div id="project-filters" class="project-filters">
+          <button class="btn ghost active" type="button" data-project-filter="all">All Projects</button>
+          <button class="btn ghost" type="button" data-project-filter="hardware">Hardware</button>
+          <button class="btn ghost" type="button" data-project-filter="software">Software</button>
+          <button class="btn ghost" type="button" data-project-filter="hybrid">Hybrid</button>
+        </div>
+        <button id="expand-all-projects" class="btn ghost" type="button">Expand all</button>
+        <button id="collapse-all-projects" class="btn ghost" type="button">Collapse all</button>
+      </div>
+    </section>
+
+    <section class="section stack reveal">
+      <article id="project-shapesite-studio" class="card">
+        <h3>ShapeSite Studio</h3>
+        <p class="date">Feb 2026 - Present</p>
+        <p><strong>Purpose:</strong> Build complete websites visually and export real deployment-ready code.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>ShapeSite Studio is a macOS app for building complete websites visually, then exporting real deployment-ready code.</p>
+          <p><strong>Key capabilities:</strong></p>
+          <ul>
+            <li>Drag-and-drop visual editor with advanced canvas controls (grid, snap, guides, spacing/debug overlays, zoom, multi-select, alignment, grouping, layers).</li>
+            <li>Flexible layout system: freeform, auto layout stacks, grid, constraints, and responsive breakpoints.</li>
+            <li>Rich design tooling: geometric + organic shapes, vector path editing, typography controls, styling/effects, and asset management.</li>
+            <li>Built-in component system: reusable blocks, custom components, variants, and plugin-like components with schema-driven settings.</li>
+            <li>Live preview + inspect workflow: select/edit elements directly from preview and keep visual/code workflows in sync.</li>
+            <li>Internal code editor for HTML/CSS/JS with split-mode editing.</li>
+            <li>Import existing HTML/pages (rule-based DOM/CSS parsing, no AI required) and convert to editable structures.</li>
+            <li>Data/API binding and dynamic runtime scaffolding with secure proxy templates.</li>
+            <li>Optional admin/auth/database scaffolding for static + backend-ready exports.</li>
+            <li>Security toolkit with hardened presets, security audits, host-specific config generation (Netlify/Vercel/Nginx/Apache/etc.), and deployment guidance.</li>
+            <li>Project system with autosave, version timeline, checkpoints, and portable .shapesite files.</li>
+          </ul>
+          <p>In short: it combines visual design power (Figma/Webflow style) with practical engineering output (clean HTML/CSS/JS + deploy/security scaffolding) in one local macOS studio.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/shapesite/shapesite1-main-page-in-split-view-showing-shape-and-corresponding-html-web-code.jpeg" alt="shapesite1 main page in split view showing shape and corresponding html web code" /><figcaption>shapesite1 main page in split view showing shape and corresponding html web code</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/shapesite/shapesite2-showing-sidebar-option-with-ability-to-add-ai-databases-auth-and-assets-to-the-webpage.jpeg" alt="shapesite2 showing sidebar option with ability to add ai databases auth and assets to the webpage" /><figcaption>shapesite2 showing sidebar option with ability to add ai databases auth and assets to the webpage</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/shapesite/shapesite3-security-center-audit-allowing-you-to-add-additional-security-to-your-webpage.jpeg" alt="shapesite3 security center audit allowing you to add additional security to your webpage" /><figcaption>shapesite3 security center audit allowing you to add additional security to your webpage</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>Visual Builder</span><span>Code Export</span><span>Security Audits</span><span>macOS App</span></div>
+      </article>
+      <article id="project-mouse-drone" class="card">
+        <h3>Multi-purpose Operational Unmanned Aerial System for Emergency Response &amp; Environmental Monitoring (M.O.U.S.E) ⚙</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Dec 2025 - Present</p>
+        <p><strong>Purpose:</strong> Autonomous drone platform for emergency response, monitoring, and delivery support.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Designed and developed a multi-purpose autonomous drone platform intended for emergency response, environmental monitoring, and autonomous delivery applications. The system integrates onboard GPS, LiDAR, barometric pressure, temperature sensors, cameras, and audio communication for real-time data collection and remote situational awareness.</p>
+          <p>The drone includes a mechanical gripper system capable of transporting and deploying payloads such as medical supplies, food, or emergency equipment to hazardous or difficult-to-access locations.</p>
+          <p>Autonomous flight capabilities were implemented using ArduPilot and Mission Planner, including preprogrammed GPS waypoints, obstacle avoidance, and automated landing for reliable low-intervention operation.</p>
+          <p>A Raspberry Pi companion computer supports onboard processing, sensor coordination, and data collection. The drone functions as a mobile sensing platform for environmental mapping, aerial imaging, atmospheric monitoring, and two-way communication.</p>
+          <p>(Honors Thesis Project, includes both hardware and software creation.)</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse-12-hardware-setup.jpeg" alt="mouse 12 hardware setup" /><figcaption>mouse 12 hardware setup</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse-13-code.jpeg" alt="mouse 13 code" /><figcaption>mouse 13 code</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse1-main-page-with-controls.jpeg" alt="mouse1 main page with controls" /><figcaption>mouse1 main page with controls</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse10-operator-user-managment.jpeg" alt="mouse10 operator user managment" /><figcaption>mouse10 operator user managment</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse11-user-gui-customization.jpeg" alt="mouse11 user gui customization" /><figcaption>mouse11 user gui customization</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse2-flight-planner-for-autonomous-flight.jpeg" alt="mouse2 flight planner for autonomous flight" /><figcaption>mouse2 flight planner for autonomous flight</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse3-object-detection-and-tracking.jpeg" alt="mouse3 object detection and tracking" /><figcaption>mouse3 object detection and tracking</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse4-geofencing.jpeg" alt="mouse4 geofencing" /><figcaption>mouse4 geofencing</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse5-speaker-and-microphone-control.jpeg" alt="mouse5 speaker and microphone control" /><figcaption>mouse5 speaker and microphone control</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse6-camera-control-and-3d-mapping.jpeg" alt="mouse6 camera control and 3d mapping" /><figcaption>mouse6 camera control and 3d mapping</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse7-flight-recorder.jpeg" alt="mouse7 flight recorder" /><figcaption>mouse7 flight recorder</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse8-environmental-monitor-sensor.jpeg" alt="mouse8 environmental monitor sensor" /><figcaption>mouse8 environmental monitor sensor</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/mouse/mouse9-environmental-monitor-sensor.jpeg" alt="mouse9 environmental monitor sensor" /><figcaption>mouse9 environmental monitor sensor</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>ArduPilot</span><span class="chip-hardware">Raspberry Pi</span><span>Autonomous Flight</span><span>Honors Thesis</span></div>
+      </article>
+      <article id="project-nextgen-ids" class="card">
+        <h3>NextGen Software-Based Intrusion Detection</h3>
+        <p class="date">Oct 2025 - Present</p>
+        <p><strong>Purpose:</strong> Real-time multi-module intrusion detection and analytics.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Developed a multi-component intrusion detection system featuring a Java-based security analytics dashboard with a prototype Next.js web interface for future web-based monitoring.</p>
+          <p>The platform aggregates and correlates security events from system resources, network traffic, file-system activity, and threat intelligence analysis modules for real-time visibility.</p>
+          <p>System Monitor tracks CPU, memory, and processes via OSHI telemetry. Network Monitor captures/analyzes traffic to detect unusual behavior. File Monitor tracks file changes with suspicious-pattern scoring and quarantine support.</p>
+          <p>Dashboard was built with Java Swing and JFreeChart, with real-time tabs/charts/event logs. An event-driven architecture using BlockingQueue allows modules to feed a centralized analytics engine with filtering/search/prioritization/historical analysis.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ids/ids-3-gui.jpeg" alt="ids 3 gui" /><figcaption>ids 3 gui</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ids/ids-nextgen-software-based-intrusion-detection.jpeg" alt="ids nextgen software based intrusion detection" /><figcaption>ids nextgen software based intrusion detection</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ids/ids2-network-analysis-and-metrics.jpeg" alt="ids2 network analysis and metrics" /><figcaption>ids2 network analysis and metrics</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ids/ids4-code.jpeg" alt="ids4 code" /><figcaption>ids4 code</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>Java</span><span>Next.js</span><span>OSHI</span><span>JFreeChart</span><span>IDS</span></div>
+      </article>
+      <article id="project-aura-hackuncp26" class="card">
+        <h3>AURA (HackUNCP26)</h3>
+        <p class="date">Feb 2026 - Feb 2026</p>
+        <p><strong>Purpose:</strong> All-in-one productivity and intelligence app for students/professionals.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p><strong>AURA is an all-in-one productivity and intelligence app that helps users:</strong></p>
+          <ul>
+            <li>Sync assignments and manage deadlines</li>
+            <li>Prioritize tasks and generate AI-based schedules</li>
+            <li>Chat with AI for study/work support</li>
+            <li>Organize documents, recordings, and transcripts into sections/subsections</li>
+            <li>Ask AI questions grounded in uploaded content</li>
+            <li>Get field-specific security/videos/news intel/events</li>
+            <li>Discover jobs and learning resources</li>
+            <li>Track productivity trends and wellness signals</li>
+            <li>Use a Chrome extension to capture web insights into the app</li>
+          </ul>
+          <div class="video-embed">
+            <iframe src="https://www.youtube.com/embed/WDG4yBLh3To" title="AURA (HackUNCP26) walkthrough" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          </div>
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-10-analytics-keep-track-of-studnet-use-of-platforms-to-track-trends-and-out-of-ordinary-behavior-to-alert-you-about-possibility-of-fatigue.jpeg" alt="aura 10 analytics keep track of studnet use of platforms to track trends and out of ordinary behavior to alert you about possibility of fatigue" /><figcaption>aura 10 analytics keep track of studnet use of platforms to track trends and out of ordinary behavior to alert you about possibility of fatigue</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-11-welness-tab-allows-students-to-set-timer-for-themselves-to-take-breaks-and-reminds-them-they-should-take-a-break-every-once-in-a-while.jpeg" alt="aura 11 welness tab allows students to set timer for themselves to take breaks and reminds them they should take a break every once in a while" /><figcaption>aura 11 welness tab allows students to set timer for themselves to take breaks and reminds them they should take a break every once in a while</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-14-networking-and-connecting-students-prefessionals-page.jpeg" alt="aura 14 networking and connecting students prefessionals page" /><figcaption>aura 14 networking and connecting students prefessionals page</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-2page-with-canvas-and-other-learning-management-integration-of-upcoming-tasks-update-and-ai-suggestion.jpeg" alt="aura 2page with canvas and other learning management integration of upcoming tasks update and ai suggestion" /><figcaption>aura 2page with canvas and other learning management integration of upcoming tasks update and ai suggestion</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-3-page-that-gives-you-update-of-all-important-security-updates-in-your-field-and-important-news-as-well-as-cve-feed.jpeg" alt="aura 3 page that gives you update of all important security updates in your field and important news as well as cve feed" /><figcaption>aura 3 page that gives you update of all important security updates in your field and important news as well as cve feed</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-4-ai-lab-it-analyze-meetings-videos-and-gives-you-and-overview-summery-tasklist-or-flashcard-and-gives-you-the-option-to-chat-about-it.jpeg" alt="aura 4 ai lab it analyze meetings videos and gives you and overview summery tasklist or flashcard and gives you the option to chat about it" /><figcaption>aura 4 ai lab it analyze meetings videos and gives you and overview summery tasklist or flashcard and gives you the option to chat about it</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-5-ai-study-buddy-or-field-specific-question-chatbot-with-ability-to-upload-file.jpeg" alt="aura 5 ai study buddy or field specific question chatbot with ability to upload file" /><figcaption>aura 5 ai study buddy or field specific question chatbot with ability to upload file</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-6-learning-feed-allows-students-to-look-for-educational-videos-on-youtube-through-the-app.jpeg" alt="aura 6 learning feed allows students to look for educational videos on youtube through the app" /><figcaption>aura 6 learning feed allows students to look for educational videos on youtube through the app</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-7-event-tab-based-on-your-stem-field-it-pulls-data-on-the-nearest-events-related-to-your-field-and-shows-them-to-you-closest-first.jpeg" alt="aura 7 event tab based on your stem field it pulls data on the nearest events related to your field and shows them to you closest first" /><figcaption>aura 7 event tab based on your stem field it pulls data on the nearest events related to your field and shows them to you closest first</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura-9-allows-you-to-create-folders-to-keep-your-data-organized-upload-materials-and-automatically-analyzes-for-information-and-keeps-it.jpeg" alt="aura 9 allows you to create folders to keep your data organized upload materials and automatically analyzes for information and keeps it" /><figcaption>aura 9 allows you to create folders to keep your data organized upload materials and automatically analyzes for information and keeps it</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura1-main-page-with-overview-and-ability-to-listen-to-the-major-news-in-your-field-using-elvenlabs-like-a-podcast-and-add-tasks-to-your-day-plan.jpeg" alt="aura1 main page with overview and ability to listen to the major news in your field using elvenlabs like a podcast and add tasks to your day plan" /><figcaption>aura1 main page with overview and ability to listen to the major news in your field using elvenlabs like a podcast and add tasks to your day plan</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura12-network-allows-students-professionals-to-reachout-to-other-professionals-and-filtered-by-distance.jpeg" alt="aura12 network allows students professionals to reachout to other professionals and filtered by distance" /><figcaption>aura12 network allows students professionals to reachout to other professionals and filtered by distance</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura13-network-allows-students-professionals-to-reachout-to-other-professionals-and-filtered-by-distance.jpeg" alt="aura13 network allows students professionals to reachout to other professionals and filtered by distance" /><figcaption>aura13 network allows students professionals to reachout to other professionals and filtered by distance</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/aura/aura8-the-job-board-pulls-all-data-about-fulltime-parttime-jobs-and-internships-for-students-and-professionals.jpeg" alt="aura8 the job board pulls all data about fulltime parttime jobs and internships for students and professionals" /><figcaption>aura8 the job board pulls all data about fulltime parttime jobs and internships for students and professionals</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>1st Place - HackUNCP 2026</span><span>AI Productivity</span><span>Security Intel</span></div>
+      </article>
+      <article id="project-guardiapass-hackncstate26" class="card">
+        <h3>GUARDIAPASS (HackNC State26)</h3>
+        <p class="date">Feb 2026 - Feb 2026</p>
+        <p><strong>Purpose:</strong> AI-powered security command center for everyday users.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>GuardiaPass combines encrypted credential management, browser protection, and intelligent assistants in one system.</p>
+          <p>It secures passwords, identities, and sensitive media with local encryption, then extends protection into the browser with autofill, phishing/domain checks, breach intelligence, and suspicious-email filtering.</p>
+          <p>Includes multiple AI assistants: in-app Security Advisor, extension page assistants for live site analysis, and contextual tools for password generation/strength/risk explanations.</p>
+          <p>Accessibility includes read-aloud support. Architecture includes local-first secure storage, server-side API proxying for key protection, real-time telemetry, trust checks, and assistant-driven workflows.</p>
+          <p>In short, GuardiaPass is an AI-powered security command center: protect, verify, assist, and educate from one place.</p>
+          <div class="video-embed">
+            <iframe src="https://www.youtube.com/embed/2eVS3mA3SXk" title="GUARDIAPASS (HackNC State26) walkthrough" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          </div>
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass-9-accessibility-and-settings.jpeg" alt="gaurdiapass 9 accessibility and settings" /><figcaption>gaurdiapass 9 accessibility and settings</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass1-login-screen.jpeg" alt="gaurdiapass1 login screen" /><figcaption>gaurdiapass1 login screen</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass2-chrome-extension.jpeg" alt="gaurdiapass2 chrome extension" /><figcaption>gaurdiapass2 chrome extension</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass3-main-page-with-password-id-and-photo-vault.jpeg" alt="gaurdiapass3 main page with password id and photo vault" /><figcaption>gaurdiapass3 main page with password id and photo vault</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass4-userid-darkweb-scanner.jpeg" alt="gaurdiapass4 userid darkweb scanner" /><figcaption>gaurdiapass4 userid darkweb scanner</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass5-website-ai-verifier.jpeg" alt="gaurdiapass5 website ai verifier" /><figcaption>gaurdiapass5 website ai verifier</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass6-cyber-academy-for-education.jpeg" alt="gaurdiapass6 cyber academy for education" /><figcaption>gaurdiapass6 cyber academy for education</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass7-activity-analytics.jpeg" alt="gaurdiapass7 activity analytics" /><figcaption>gaurdiapass7 activity analytics</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapass8-network-traffic.jpeg" alt="gaurdiapass8 network traffic" /><figcaption>gaurdiapass8 network traffic</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/gaurdiapss10-active-email-checker-with-probability-scores.jpeg" alt="gaurdiapss10 active email checker with probability scores" /><figcaption>gaurdiapss10 active email checker with probability scores</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/hackncstate-group-pic.jpeg" alt="hackncstate group pic" /><figcaption>hackncstate group pic</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/hackncstate-pic-of-perticipents-working.jpeg" alt="hackncstate pic of perticipents working" /><figcaption>hackncstate pic of perticipents working</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/hackncstate26-devpost-win-confirmation-email.jpeg" alt="hackncstate26 devpost win confirmation email" /><figcaption>hackncstate26 devpost win confirmation email</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/guardiapass/hackncstate26-pic-of-a-workshop.jpeg" alt="hackncstate26 pic of a workshop" /><figcaption>hackncstate26 pic of a workshop</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>3rd Place - Agency Track</span><span>Encryption</span><span>Browser Security</span></div>
+      </article>
+      <article id="project-gratitude-afropix26" class="card">
+        <h3>Gratitude (AfroPix26)</h3>
+        <p class="date">Feb 2026 - Feb 2026</p>
+        <p><strong>Purpose:</strong> Neighborhood discovery platform for trusted local support/opportunities.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Gratitude is a neighborhood discovery platform designed to make local support and opportunities easier to find, trust, and act on.</p>
+          <p>The app organizes content into tabs for events, volunteer opportunities, food banks/donation resources, community organizations, help &amp; support services, nearby connections, and civics/politics.</p>
+          <p>Experience is map-first and filter-driven (distance/relevance/date) with list/map/split views, source attribution, confidence indicators, and deduplication safeguards.</p>
+          <p>Platform remains useful without AI via scraper/API pipelines and rule-based categorization; AI is an enhancement layer for structuring/classification/gap filling.</p>
+          <p>Includes built-in AI assistance and language customization.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><video controls preload="metadata" src="./assets/media/projects/gratitude/afropix-application-into-and-walkthrough.mp4"></video><figcaption>afropix application into and walkthrough</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/gratitude/afropix26-group-pic.jpeg" alt="afropix26 group pic" /><figcaption>afropix26 group pic</figcaption></figure>
+            <figure class="media-item"><video controls preload="metadata" src="./assets/media/projects/gratitude/afropix26-project-walkthou.mp4"></video><figcaption>afropix26 project walkthou</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/gratitude/gratitude-application-logo-for-devpost.jpeg" alt="gratitude application logo for devpost" /><figcaption>gratitude application logo for devpost</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>1st Place - AfroPix26</span><span>Community Platform</span><span>Map-first UX</span></div>
+      </article>
+      <article id="project-keylogger" class="card">
+        <h3>KeyLogger</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Dec 2025 - Jan 2026</p>
+        <p><strong>Purpose:</strong> Cybersecurity research proof-of-concept for endpoint risk demonstration.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Developed a proof-of-concept background keylogger for cybersecurity research and demonstration.</p>
+          <p>The system can be deployed via USB, runs in the background, captures keystrokes, stores logs locally, and transmits encrypted reports via scheduled email.</p>
+          <p>Purpose: demonstrate endpoint security risk, persistence techniques, and exfiltration behavior to support detection and mitigation understanding.</p>
+
+
+        </details>
+        <div class="chips"><span>Security Research</span><span>Endpoint Risk</span></div>
+      </article>
+      <article id="project-ctis-lab-deployment" class="card">
+        <h3>CTIS Lab Infrastructure Deployment ⚙ - Guilford College</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Aug 2024 - Dec 2025</p>
+        <p><strong>Purpose:</strong> Enterprise lab restoration and full production deployment.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Led complete deployment/restoration of CTIS computer lab infrastructure from non-functional state to fully operational enterprise-style environment.</p>
+          <p>Diagnosed/repaired/reconfigured Dell PowerEdge and HP servers; built Proxmox cluster for virtualized domain services.</p>
+          <p>Designed/deployed AD DS, DNS, DHCP, Group Policy, with primary and backup domain controllers.</p>
+          <p>Deployed ~12 domain-joined workstations with reimaging, drivers, software, and domain integration.</p>
+          <p>Built accounts/security groups/permissions for controlled access and system security.</p>
+          <p>Installed rack infrastructure, power/network organization, Ethernet cabling, and tested network stability.</p>
+          <p>Worked with IT to deploy/configure wireless AP and secure domain-managed connectivity.</p>
+          <p>Performed extensive hardware diagnostics and restored previously unusable systems.</p>
+          <p>Strong teamwork with partner enabled successful lab build and deployment.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ctis-lab/ctis-lab-infrastructure-deployment-couple-of-desktops.jpeg" alt="ctis lab infrastructure deployment couple of desktops" /><figcaption>ctis lab infrastructure deployment couple of desktops</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ctis-lab/ctis-lab-infrastructure-deployment-server-setup1.jpeg" alt="ctis lab infrastructure deployment server setup1" /><figcaption>ctis lab infrastructure deployment server setup1</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/ctis-lab/ctis-lab-infrastructure-deployment-settingup-lab-access-points.jpeg" alt="ctis lab infrastructure deployment settingup lab access points" /><figcaption>ctis lab infrastructure deployment settingup lab access points</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span class="chip-hardware">Raspberry Pi</span><span>Active Directory</span><span>Proxmox</span><span>Windows Server</span><span>Enterprise Lab</span></div>
+      </article>
+      <article id="project-quickvest-hacknc2025" class="card">
+        <h3>QuickVest Fidelity App (HackNC2025)</h3>
+        <p class="date">Oct 2025 - Oct 2025</p>
+        <p><strong>Purpose:</strong> Accessible fintech prototype for trust-centered investing UX.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Team designed QuickVest for Fidelity with focus on accessibility, trust, and usability, reducing onboarding friction for new investors.</p>
+          <p>Color/contrast choices prioritized visual comfort and inclusion for color-vision accessibility.</p>
+          <p>Main technical challenge: Figma lacks native external AI integration (Gemini) and existing widgets were insufficient.</p>
+          <p>Built a custom widget from scratch for Gemini integration in Figma (Edit Mode only; Figma limitation in Presenter View).</p>
+          <p>Widget is the only black-box AI part; all other flows/pages/designs were built by the team.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/quickvest/quickvestapp-first5-page.jpeg" alt="quickvestapp first5 page" /><figcaption>quickvestapp first5 page</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>Best Community Hack</span><span>FinTech</span><span>Figma Widget</span></div>
+      </article>
+      <article id="project-nc-seagrant-robotics" class="card">
+        <h3>NC SeaGrant AI Robotics ⚙</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Jan 2025 - Jun 2025</p>
+        <p><strong>Purpose:</strong> Autonomous shoreline cleanup robotics project.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Contributed to autonomous environmental cleanup robot for shoreline waste monitoring/removal.</p>
+          <p>Work included hardware integration, system setup, sensor testing, AI training, and autonomy control logic development.</p>
+          <p>Used PyTorch, TensorFlow, and Hugging Face resources. Deployed system on NVIDIA Jetson Nano for sensing/processing/autonomous runtime.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-ai-model-in-action.jpeg" alt="nc seagrant ai robotics ai model in action" /><figcaption>nc seagrant ai robotics ai model in action</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-certificate-of-compleation.jpeg" alt="nc seagrant ai robotics certificate of compleation" /><figcaption>nc seagrant ai robotics certificate of compleation</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-guilford-college-students-involved-in-the-project-the-rest-were-from-early-college-at-guilford.jpeg" alt="nc seagrant ai robotics guilford college students involved in the project the rest were from early college at guilford" /><figcaption>nc seagrant ai robotics guilford college students involved in the project the rest were from early college at guilford</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-robot-full-view.jpeg" alt="nc seagrant ai robotics robot full view" /><figcaption>nc seagrant ai robotics robot full view</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-robot-side-view-r.jpeg" alt="nc seagrant ai robotics robot side view r" /><figcaption>nc seagrant ai robotics robot side view r</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-robot-sideview-l.jpeg" alt="nc seagrant ai robotics robot sideview l" /><figcaption>nc seagrant ai robotics robot sideview l</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-team-meeting-photo.jpeg" alt="nc seagrant ai robotics team meeting photo" /><figcaption>nc seagrant ai robotics team meeting photo</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/seagrant/nc-seagrant-ai-robotics-team-photo.jpeg" alt="nc seagrant ai robotics team photo" /><figcaption>nc seagrant ai robotics team photo</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span class="chip-hardware">Raspberry Pi</span><span>Jetson Nano</span><span>PyTorch</span><span>TensorFlow</span><span>Robotics</span></div>
+      </article>
+      <article id="project-steganography-tool" class="card">
+        <h3>Steganography Tool</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Feb 2025 - Apr 2025</p>
+        <p><strong>Purpose:</strong> Java steganography detect/embed/remove toolkit across multiple formats.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Developed Java + Maven steganography analysis tool supporting images/audio/documents (PNG, BMP, WAV, PDF, DOCX, TXT).</p>
+          <p>Implements LSB techniques for images/audio while preserving file integrity.</p>
+          <p>Document detection includes PDF metadata analysis, DOCX hidden text formatting checks, and TXT zero-width character detection.</p>
+          <p>Integrated Apache PDFBox, Apache POI, Java ImageIO, and Java Sound API.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/steganography/steganography-tool.jpeg" alt="steganography tool" /><figcaption>steganography tool</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>Java</span><span>Maven</span><span>PDFBox</span><span>POI</span><span>LSB</span></div>
+      </article>
+      <article id="project-file-signature-analyzer" class="card">
+        <h3>File Signature Analyzer</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Feb 2025 - Mar 2025</p>
+        <p><strong>Purpose:</strong> Digital forensics tool for true file-type/integrity analysis.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Developed cybersecurity/digital forensics tool that detects fake/renamed files by binary signatures rather than extensions.</p>
+          <p>Verifies integrity with MD5/SHA-1/SHA-256 and extracts metadata/structure/system properties.</p>
+          <p>Includes hex-level viewing/search, entropy and MIME analysis, structural validation, and anomaly detection.</p>
+          <p>Also performs image steganography analysis and hidden data extraction for forensic reporting.</p>
+          <p>Runs on macOS and Windows; fully implemented in Java.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/file-signature-analyzer/file-signature-analyzer-file-header-signiture.jpeg" alt="file signature analyzer file header signiture" /><figcaption>file signature analyzer file header signiture</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/file-signature-analyzer/file-signature-analyzer-full-report-page.jpeg" alt="file signature analyzer full report page" /><figcaption>file signature analyzer full report page</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/file-signature-analyzer/file-signature-analyzer-hexviewer.jpeg" alt="file signature analyzer hexviewer" /><figcaption>file signature analyzer hexviewer</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/file-signature-analyzer/file-signature-analyzer-metadata-extractor.jpeg" alt="file signature analyzer metadata extractor" /><figcaption>file signature analyzer metadata extractor</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/file-signature-analyzer/file-signature-analyzer-stenegraphy-detector.jpeg" alt="file signature analyzer stenegraphy detector" /><figcaption>file signature analyzer stenegraphy detector</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>Java</span><span>Forensics</span><span>Hashing</span><span>macOS/Windows</span></div>
+      </article>
+      <article id="project-raspberry-pi-cluster" class="card">
+        <h3>Raspberry Pi 5 Cluster ⚙</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Oct 2024 - Dec 2024</p>
+        <p><strong>Purpose:</strong> Distributed cluster experimentation on low-power hardware.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Built distributed clusters using Raspberry Pi and Turing Pi 2 board with Raspberry Pi CM4 modules and NVIDIA Jetson Nano.</p>
+          <p>Deployed Docker Swarm and K3s Kubernetes clusters to compare orchestration performance, scalability, and resource use.</p>
+          <p>Tested master/worker reliability and workload distribution.</p>
+          <p>Added Ansible automation, Stress-ng load testing, and Prometheus/Node Exporter monitoring.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/raspberry-pi-cluster/raspberry-pi-5-cluster-cluster2.jpeg" alt="raspberry pi 5 cluster cluster2" /><figcaption>raspberry pi 5 cluster cluster2</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/raspberry-pi-cluster/raspberry-pi-5-cluster-raspi-pi-cluster-1.jpeg" alt="raspberry pi 5 cluster raspi pi cluster 1" /><figcaption>raspberry pi 5 cluster raspi pi cluster 1</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/raspberry-pi-cluster/raspberry-pi-5-cluster-turing-pi-2-cluster-board-w-raspberry-pi-cm4-x4-nvidia-jetson-nano.jpeg" alt="raspberry pi 5 cluster turing pi 2 cluster board w raspberry pi cm4 x4 nvidia jetson nano" /><figcaption>raspberry pi 5 cluster turing pi 2 cluster board w raspberry pi cm4 x4 nvidia jetson nano</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span class="chip-hardware">Raspberry Pi</span><span>K3s</span><span>Docker Swarm</span><span>Ansible</span><span>Prometheus</span></div>
+      </article>
+      <article id="project-wifi-pineapple-tester" class="card">
+        <h3>WiFi Pineapple-Style Wireless Tester ⚙</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Oct 2024 - Dec 2024</p>
+        <p><strong>Purpose:</strong> Wireless security testing and reconnaissance platform.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Configured USB WiFi adapter with monitor mode and packet injection capabilities for wireless security analysis.</p>
+          <p>Used system for signal broadcasting/monitoring, packet capture, and nearby WiFi analysis.</p>
+          <p>Demonstrated rogue AP and wireless attack patterns in controlled environments and deepened defensive strategy understanding.</p>
+
+
+        </details>
+        <div class="chips"><span class="chip-hardware">Raspberry Pi</span><span>Wireless Security</span><span>Packet Capture</span><span>Reconnaissance</span></div>
+      </article>
+      <article id="project-timevault-hacknc2024" class="card">
+        <h3>TimeVault (HackNC2024)</h3>
+        <p class="date">Oct 2024 - Oct 2024</p>
+        <p><strong>Purpose:</strong> Loan/payment and interest estimator with finance chat.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Time Value Vault provides loan payment estimates based on interest, years, payments/year, and initial loan value.</p>
+          <p>Returns per-payment amount and total interest across loan lifecycle and sends results via email.</p>
+          <p>Includes finance chat where user asks finance questions and Gemini AI answers.</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/timevault/timevault-hacknc2024.jpeg" alt="timevault hacknc2024" /><figcaption>timevault hacknc2024</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span>Hackathon Build</span><span>Finance Tool</span><span>AI Chat</span></div>
+      </article>
+      <article id="project-smart-doorbell-iot" class="card">
+        <h3>Smart Doorbell IoT Device ⚙</h3>
+        <p class="meta">Associated with Guilford College</p>
+        <p class="date">Oct 2023 - Dec 2023</p>
+        <p><strong>Purpose:</strong> Raspberry Pi smart doorbell system with remote communication.</p>
+        <details>
+          <summary>Expand details</summary>
+          <p>Designed and implemented a smart doorbell using Raspberry Pi 4 with camera, USB microphone, 3.5mm speaker, button input, and 3.5-inch LCD status display.</p>
+          <p>Developed in Python (VS Code), based on open-source code adapted for Python 3 and Pi 4/5, configured for startup automation.</p>
+          <p>GPIO button triggers capture pipeline: libcamera video + ALSA audio; devices configured/tested with Linux CLI.</p>
+          <p>Integrated Jitsi Meet for real-time audio/video communication and EmailJS notifications with session link on button press.</p>
+          <p>Work included Linux configuration, peripheral driver setup, camera/ALSA enablement, recording/playback validation, and robust semi-autonomous startup.</p>
+          <p>(Very similar to a Ring camera workflow.)</p>
+
+          <div class="media-grid">
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/smart-doorbell/smart-doorbell-iot-device-overveiw-page-2.jpeg" alt="smart doorbell iot device overveiw page 2" /><figcaption>smart doorbell iot device overveiw page 2</figcaption></figure>
+            <figure class="media-item"><img loading="lazy" decoding="async" src="./assets/media/projects/smart-doorbell/smart-doorbell-iot-device-overview-of-hardware-image-1.jpeg" alt="smart doorbell iot device overview of hardware image 1" /><figcaption>smart doorbell iot device overview of hardware image 1</figcaption></figure>
+          </div>
+        </details>
+        <div class="chips"><span class="chip-hardware">Raspberry Pi</span><span>Python</span><span>IoT</span><span>Embedded Linux</span></div>
+      </article>
+    </section>
+  </main>
+
+  <footer><p>Mohammad Agha Mohammadi | <span id="year"></span></p></footer>
+  <script src="./script.js"></script>
+  <script src="./portal.js"></script>
+</body>
+</html>

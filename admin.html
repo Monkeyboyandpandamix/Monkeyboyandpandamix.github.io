@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal | Mohammad Agha Mohammadi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="site-header">
+    <div class="container site-header-inner">
+      <a class="brand" href="./index.html">MAM</a>
+      <nav>
+        <a data-page="index.html" href="./index.html">Home</a>
+        <a data-page="projects.html" href="./projects.html">Projects</a>
+        <a data-page="events.html" href="./events.html">Events</a>
+        <a data-page="timeline.html" href="./timeline.html">Timeline</a>
+        <a data-page="achievements.html" href="./achievements.html">Achievements</a>
+        <a data-page="login.html" href="./login.html">Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="admin-root" class="container">
+    <section class="section panel reveal">
+      <h1 class="page-title">Admin Portal</h1>
+      <p class="subtle">Manage blocks, verification links, media (images/videos/YouTube/links), page themes, timeline filters, and analytics.</p>
+      <div class="actions">
+        <label>Insert new block at:
+          <select id="add-block-position"><option value="0">Position 1</option></select>
+        </label>
+        <button id="add-block" class="btn ghost" type="button">Add Future Achievement Block</button>
+        <button id="add-link" class="btn ghost" type="button">Add Verification Link</button>
+        <button id="add-media" class="btn ghost" type="button">Add Media</button>
+        <button id="save-blocks" class="btn primary" type="button">Save Changes</button>
+        <button id="logout-btn" class="btn ghost" type="button">Logout</button>
+      </div>
+      <p id="admin-message" class="subtle"></p>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Theme & Timeline Settings</h2>
+      <p class="subtle">Choose pages that should use Cyber Red theme and optionally hide project entries on timeline.</p>
+      <div id="red-pages-list" class="settings-grid"></div>
+      <label class="settings-checkbox"><input id="timeline-hide-projects" type="checkbox" /> <span>Hide project items on timeline for this user/browser</span></label>
+      <p class="subtle section">Choose icon style per page.</p>
+      <div id="icon-style-list" class="settings-grid"></div>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Visitor Analytics</h2>
+      <div class="grid-3">
+        <article class="card"><h3>Total Visits (Local)</h3><p id="metric-local-total">0</p></article>
+        <article class="card"><h3>Total Visits (Global)</h3><p id="metric-global-total">Unavailable</p></article>
+        <article class="card"><h3>Last Visit</h3><p id="metric-last-visit">N/A</p></article>
+      </div>
+      <article class="card section"><h3>Page Views</h3><ul id="metric-pages"></ul></article>
+      <div class="actions"><button id="reset-metrics-btn" class="btn ghost" type="button">Reset Analytics Counter</button></div>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Editable Achievement Blocks</h2>
+      <div id="block-editor-list" class="stack"></div>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Verification Links (Projects/Hackathons/Events)</h2>
+      <p class="subtle">Supports external URLs and proof links that auto-render on matching cards/timeline items.</p>
+      <div id="link-editor-list" class="stack"></div>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Media Manager</h2>
+      <p class="subtle">Upload/delete images/videos and add YouTube/external links. Media auto-populates on matching targets across pages.</p>
+      <div id="media-editor-list" class="stack"></div>
+    </section>
+  </main>
+
+  <footer><p>&copy; 2026 Mohammad Agha Mohammadi Cyber - all rights reserved Content and design are monitored and protected for digital security compliance.</p></footer>
+  <script src="./script.js"></script>
+  <script src="./portal.js"></script>
+</body>
+</html>

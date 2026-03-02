@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Login | Mohammad Agha Mohammadi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="site-header">
+    <div class="container site-header-inner">
+      <a class="brand" href="./index.html">MAM</a>
+      <nav>
+        <a data-page="index.html" href="./index.html">Home</a>
+        <a data-page="projects.html" href="./projects.html">Projects</a>
+        <a data-page="timeline.html" href="./timeline.html">Timeline</a>
+        <a data-page="contact.html" href="./contact.html">Contact</a>
+        <a data-page="login.html" href="./login.html">Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section panel reveal">
+      <h1 class="page-title">Portal Login</h1>
+      <form id="login-form" class="form-grid" autocomplete="off">
+        <label class="full">Password
+          <input id="password" type="password" required />
+        </label>
+        <button class="btn primary" type="submit">Login</button>
+      </form>
+      <p id="login-message" class="subtle"></p>
+    </section>
+  </main>
+
+  <footer><p>&copy; 2026 Mohammad Agha Mohammadi Cyber - all rights reserved Content and design are monitored and protected for digital security compliance.</p></footer>
+  <script src="./script.js"></script>
+  <script src="./portal.js"></script>
+</body>
+</html>
