@@ -724,7 +724,25 @@
     const mount = document.getElementById(containerId);
     if (!mount) return;
     mount.innerHTML = '';
-    items.forEach((item, index) => mount.appendChild(renderer(item, index)));
+    let list = items;
+    if (!Array.isArray(list)) {
+      if (list && typeof list === 'object') {
+        list = Object.values(list);
+      } else {
+        list = [];
+      }
+      ts('warn', 'admin-cms', `renderFriendlyList(${containerId}): items was not an array — coerced`, {
+        coercedLength: list.length,
+      });
+    }
+    list.forEach((item, index) => {
+      try {
+        const node = renderer(item, index);
+        if (node) mount.appendChild(node);
+      } catch (err) {
+        ts('error', 'admin-cms', `renderFriendlyList(${containerId}): renderer threw on index ${index}`, err);
+      }
+    });
   }
 
   function bindAdminTabs() {

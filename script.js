@@ -16,23 +16,37 @@ const observer = new IntersectionObserver(
   { threshold: 0.03, rootMargin: "0px 0px -8% 0px" }
 );
 
-document.querySelectorAll('.reveal').forEach((el, i) => {
-  el.style.transitionDelay = `${i * 70}ms`;
+const forceShowAllReveals = currentFile === 'projects.html' || currentFile === 'admin.html';
+let revealIndex = 0;
+
+function registerReveal(el) {
+  if (!el || el.dataset.revealRegistered === '1') return;
+  el.dataset.revealRegistered = '1';
+  if (forceShowAllReveals) {
+    el.classList.add('show');
+    return;
+  }
+  el.style.transitionDelay = `${revealIndex++ * 70}ms`;
   observer.observe(el);
   const rect = el.getBoundingClientRect();
   if (rect.top < window.innerHeight * 0.98 && rect.bottom > 0) {
     el.classList.add('show');
   }
+}
+
+document.querySelectorAll('.reveal').forEach(registerReveal);
+
+/* Watch for .reveal elements injected later by cms-render.js / admin-cms.js so they don't stay invisible at opacity:0. */
+const revealMutationObserver = new MutationObserver((mutations) => {
+  for (const m of mutations) {
+    m.addedNodes.forEach((node) => {
+      if (node.nodeType !== 1) return;
+      if (node.classList && node.classList.contains('reveal')) registerReveal(node);
+      if (node.querySelectorAll) node.querySelectorAll('.reveal').forEach(registerReveal);
+    });
+  }
 });
-
-if (currentFile === 'projects.html') {
-  document.querySelectorAll('.reveal').forEach((el) => el.classList.add('show'));
-}
-
-/* Admin dashboard: all sections use .reveal; they must be visible immediately so tabs and forms work (IntersectionObserver can leave them at opacity:0). */
-if (currentFile === 'admin.html') {
-  document.querySelectorAll('#admin-root .reveal').forEach((el) => el.classList.add('show'));
-}
+revealMutationObserver.observe(document.body, { childList: true, subtree: true });
 
 function initExpandableBlocks() {
   const isInteractiveTarget = (target) => {
