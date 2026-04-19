@@ -592,6 +592,9 @@ function initLoginPage() {
 }
 
 function collectCmsFirestoreExtras() {
+  if (typeof window.syncFriendlyCmsEditors === 'function') {
+    window.syncFriendlyCmsEditors();
+  }
   const out = {};
   const fields = [
     ['theme-json-field', 'theme'],

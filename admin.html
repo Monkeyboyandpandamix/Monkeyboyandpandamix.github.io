@@ -48,6 +48,68 @@
     </section>
 
     <section class="section panel reveal">
+      <h2 class="page-title">Friendly Editors</h2>
+      <p class="subtle">Use these forms for the common sections. They write the matching database JSON for you. The raw JSON fields stay below as an advanced fallback.</p>
+      <div class="grid-2 admin-friendly-grid">
+        <article class="card">
+          <h3>Page Copy</h3>
+          <div class="form-grid">
+            <label>Projects heading<input id="friendly-projects-heading" type="text" /></label>
+            <label>Projects intro<input id="friendly-projects-intro" type="text" /></label>
+            <label>Events heading<input id="friendly-events-heading" type="text" /></label>
+            <label>Events intro<input id="friendly-events-intro" type="text" /></label>
+            <label>Competitions heading<input id="friendly-events-competitions-heading" type="text" /></label>
+            <label>Competitions intro<input id="friendly-events-competitions-intro" type="text" /></label>
+            <label>Experience heading<input id="friendly-experience-heading" type="text" /></label>
+            <label>Experience intro<input id="friendly-experience-intro" type="text" /></label>
+            <label>Professional section heading<input id="friendly-experience-professional-heading" type="text" /></label>
+            <label>Campus section heading<input id="friendly-experience-campus-heading" type="text" /></label>
+            <label>Achievements heading<input id="friendly-achievements-heading" type="text" /></label>
+            <label>Editable blocks heading<input id="friendly-achievements-editable-heading" type="text" /></label>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Contact & Coursework</h3>
+          <div class="form-grid">
+            <label>Contact heading<input id="friendly-contact-heading" type="text" /></label>
+            <label class="full">Contact intro<textarea id="friendly-contact-intro" rows="3"></textarea></label>
+            <label>Coursework heading<input id="friendly-coursework-heading" type="text" /></label>
+            <label>Coursework subtitle<input id="friendly-coursework-subtitle" type="text" /></label>
+            <label class="full">Coursework note<textarea id="friendly-coursework-note" rows="4"></textarea></label>
+          </div>
+          <div class="actions"><button id="friendly-add-school" class="btn ghost" type="button">Add School</button></div>
+          <div id="friendly-school-list" class="stack admin-editor-list"></div>
+        </article>
+      </div>
+      <div class="actions">
+        <button id="friendly-add-project" class="btn ghost" type="button">Add Project</button>
+        <button id="friendly-add-event" class="btn ghost" type="button">Add Event</button>
+        <button id="friendly-add-experience" class="btn ghost" type="button">Add Experience</button>
+        <button id="friendly-add-contact-action" class="btn ghost" type="button">Add Contact Button</button>
+        <button id="friendly-add-contact-card" class="btn ghost" type="button">Add Contact Card</button>
+      </div>
+      <div class="grid-2 admin-friendly-grid">
+        <section class="panel">
+          <h3>Projects</h3>
+          <div id="friendly-project-list" class="stack admin-editor-list"></div>
+        </section>
+        <section class="panel">
+          <h3>Events</h3>
+          <div id="friendly-event-list" class="stack admin-editor-list"></div>
+        </section>
+        <section class="panel">
+          <h3>Experience</h3>
+          <div id="friendly-experience-list" class="stack admin-editor-list"></div>
+        </section>
+        <section class="panel">
+          <h3>Contact Buttons & Cards</h3>
+          <div id="friendly-contact-action-list" class="stack admin-editor-list"></div>
+          <div id="friendly-contact-card-list" class="stack admin-editor-list section"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="section panel reveal">
       <h2 class="page-title">Site theme & page content (JSON → Save Changes)</h2>
       <p class="subtle">Valid JSON only. Leave blank to skip. Use <strong>Save Changes</strong> to merge into Realtime Database <code>config/site</code>. Editable here includes theme/colors, contact methods and links, coursework schools and notes, page headings/intro copy, achievements headings, and card/summary content.</p>
       <label class="full">theme (colors: accent, accent2, bg, surface, surface2, text, muted, border, timelineRole, timelineProject, timelineEvent, timelineLine)
