@@ -378,10 +378,19 @@ function refreshProjectCardKinds() {
       card.dataset.projectKinds = 'hardware software hybrid';
       return;
     }
+    if (cat === 'hardware') {
+      card.dataset.projectKinds = 'hardware';
+      return;
+    }
+    if (cat === 'software') {
+      card.dataset.projectKinds = 'software';
+      return;
+    }
+    // No explicit category — infer from chips/symbols
     const hasHardwareChip = !!card.querySelector('.chip-hardware');
     const h3Text = card.querySelector('h3')?.textContent || '';
     const hasHardwareSymbol = h3Text.includes('⚙') || !!card.querySelector('.hw-symbol');
-    card.dataset.projectKinds = hasHardwareChip || hasHardwareSymbol ? 'hardware software hybrid' : 'software';
+    card.dataset.projectKinds = hasHardwareChip || hasHardwareSymbol ? 'hardware' : 'software';
   });
 }
 

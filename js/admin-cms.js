@@ -346,6 +346,119 @@
     return 0;
   }
 
+  // ---------- Date helpers (admin friendly editors) ----------
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function pad2(n){return n<10?'0'+n:''+n;}
+  function isoToMonthInput(iso){
+    if(!iso) return '';
+    const m = String(iso).match(/^(\d{4})-(\d{2})/);
+    return m ? `${m[1]}-${m[2]}` : '';
+  }
+  function monthInputToLabel(value){
+    if(!value) return '';
+    const m = String(value).match(/^(\d{4})-(\d{2})/);
+    if(!m) return '';
+    const yr = m[1], mi = parseInt(m[2],10)-1;
+    if(mi<0||mi>11) return '';
+    return `${MONTH_ABBR[mi]} ${yr}`;
+  }
+  function monthInputToMs(value){
+    if(!value) return 0;
+    const m = String(value).match(/^(\d{4})-(\d{2})/);
+    if(!m) return 0;
+    return Date.parse(`${m[1]}-${m[2]}-01T00:00:00`);
+  }
+  function dateLineFromRange(startMonth, endMonth, ongoing){
+    const startLabel = monthInputToLabel(startMonth);
+    if(!startLabel && !endMonth && !ongoing) return '';
+    if(ongoing) return startLabel ? `${startLabel} - Present` : 'Present';
+    const endLabel = monthInputToLabel(endMonth);
+    if(startLabel && endLabel){
+      if(startLabel === endLabel) return startLabel;
+      return `${startLabel} - ${endLabel}`;
+    }
+    return startLabel || endLabel || '';
+  }
+  /** Best-effort: parse "Aug 2024", "August 2024", "Aug 2024 - Present", "Aug 2024 - Dec 2024" -> {start, end, ongoing}. */
+  function parseDateLineToRange(label){
+    const out = { start:'', end:'', ongoing:false };
+    const raw = String(label||'').trim();
+    if(!raw) return out;
+    const parts = raw.split(/\s*[-–—]\s*/);
+    const parseSegment = (seg) => {
+      if(!seg) return '';
+      if(/present/i.test(seg)) return '__present__';
+      const m = seg.match(/([A-Za-z]+)\s+(\d{4})/);
+      if(m){
+        const monIdx = MONTH_NAMES.findIndex(n=>n.toLowerCase().startsWith(m[1].toLowerCase().slice(0,3)));
+        if(monIdx>=0) return `${m[2]}-${pad2(monIdx+1)}`;
+      }
+      const yOnly = seg.match(/\b(20\d{2}|19\d{2})\b/);
+      if(yOnly) return `${yOnly[1]}-01`;
+      return '';
+    };
+    const a = parseSegment(parts[0]);
+    const b = parts[1] !== undefined ? parseSegment(parts[1]) : '';
+    if(a==='__present__') out.ongoing = true; else out.start = a;
+    if(b==='__present__') out.ongoing = true; else if(b) out.end = b;
+    return out;
+  }
+  /** Read a File as a base64 data URL (Promise). */
+  function fileToDataUrl(file){
+    return new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = ()=> resolve(String(r.result||''));
+      r.onerror = ()=> reject(r.error || new Error('FileReader failed'));
+      r.readAsDataURL(file);
+    });
+  }
+  /** Wire image-upload + thumb gallery for a card whose media textarea holds one URL per line. */
+  function attachMediaUploader(card){
+    const ta = card.querySelector('[data-field="media"]');
+    const fileInput = card.querySelector('[data-field="mediaUpload"]');
+    const thumbs = card.querySelector('[data-thumbs]');
+    if(!ta || !thumbs) return;
+    const refresh = () => {
+      const urls = String(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+      thumbs.innerHTML = urls.map((src,i) =>
+        `<div class="admin-thumb"><img src="${escapeAttr(src)}" alt="media ${i+1}" /><button type="button" class="admin-thumb-x" data-idx="${i}" aria-label="Remove">×</button></div>`
+      ).join('');
+    };
+    ta.addEventListener('input', refresh);
+    thumbs.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-idx]');
+      if(!btn) return;
+      const idx = Number(btn.getAttribute('data-idx'));
+      const urls = String(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+      urls.splice(idx,1);
+      ta.value = urls.join('\n');
+      refresh();
+    });
+    if(fileInput){
+      fileInput.addEventListener('change', async ()=>{
+        const files = [...(fileInput.files||[])];
+        if(!files.length) return;
+        const tooBig = files.filter(f=>f.size > 1500000);
+        if(tooBig.length){
+          const ok = window.confirm(`${tooBig.length} file(s) exceed ~1.5MB. Large images may slow your site or hit database limits. Continue?`);
+          if(!ok){ fileInput.value=''; return; }
+        }
+        const existing = String(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+        for(const f of files){
+          try{
+            const url = await fileToDataUrl(f);
+            existing.push(url);
+          }catch(err){ console.warn('upload failed', f.name, err); }
+        }
+        ta.value = existing.join('\n');
+        fileInput.value = '';
+        refresh();
+      });
+    }
+    refresh();
+  }
+
   async function fetchPageDoc(path) {
     const url = `./${path}`;
     ts('debug', 'static-import', `GET ${url}`);
@@ -938,22 +1051,58 @@
     ts('info', 'admin-cms', 'hydrateMissingEditorSectionsFromStatic: done');
   }
 
+  function dateRangeFieldsHtml(item){
+    const r = parseDateLineToRange(item.dateLine || '');
+    const startVal = item.startMonth || r.start || '';
+    const endVal = item.endMonth || r.end || '';
+    const ongoing = item.ongoing === true || item.ongoing === 'true' || r.ongoing;
+    return `
+      <label>Start (month)<input type="month" data-field="startMonth" value="${escapeAttr(startVal)}" /></label>
+      <label>End (month)<input type="month" data-field="endMonth" value="${escapeAttr(endVal)}" /></label>
+      <label class="admin-checkbox-row"><input type="checkbox" data-field="ongoing" ${ongoing?'checked':''} /> Ongoing / Present</label>
+      <label class="full">Display date <span class="subtle">(auto-fills from above; edit to override)</span><input data-field="dateLine" value="${escapeAttr(item.dateLine || '')}" placeholder="e.g. Aug 2024 - Present" /></label>
+    `;
+  }
+  function wireDateRange(card){
+    const start = card.querySelector('[data-field="startMonth"]');
+    const end = card.querySelector('[data-field="endMonth"]');
+    const ongoing = card.querySelector('[data-field="ongoing"]');
+    const display = card.querySelector('[data-field="dateLine"]');
+    if(!display) return;
+    let userEdited = false;
+    display.addEventListener('input', ()=>{ userEdited = true; });
+    const recompute = ()=>{
+      if(userEdited) return;
+      display.value = dateLineFromRange(start?.value || '', end?.value || '', !!ongoing?.checked);
+    };
+    [start, end, ongoing].forEach(el => el && el.addEventListener('change', recompute));
+  }
+
   function projectEditorCard(item, index) {
+    const mediaUrls = (item.media || []).map((m) => m.src || '').filter(Boolean).join('\n');
     const card = makeFriendlyEditorCard(`Project ${index + 1}`, `
       <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
       <label>Slug<input data-field="slug" value="${escapeAttr(item.slug)}" /></label>
-      <label>Date<input data-field="dateLine" value="${escapeAttr(item.dateLine)}" /></label>
       <label>Category<select data-field="category"><option value="software">Software</option><option value="hardware">Hardware</option><option value="hybrid">Hybrid</option></select></label>
-      <p class="subtle full">Hardware or Hybrid adds the ⚙ gear and hardware-styled tags. Tags are comma-separated; include the word <strong>hardware</strong> in a tag for an extra hardware chip.</p>
-      <label class="full admin-checkbox-row"><input type="checkbox" data-field="showHardwareGear" /> Show ⚙ gear for <strong>Software</strong> projects (optional)</label>
+      <label class="admin-checkbox-row"><input type="checkbox" data-field="showHardwareGear" /> Force ⚙ gear (Software only)</label>
+      <p class="subtle full">Hardware or Hybrid auto-adds the ⚙ gear, hardware-styled tags, and is filterable on the Projects page.</p>
+      ${dateRangeFieldsHtml(item)}
       <label class="full">Summary<textarea data-field="summary" rows="3">${escapeAttr(item.summaryText)}</textarea></label>
       <label class="full">Details<textarea data-field="details" rows="4">${escapeAttr(item.detailText)}</textarea></label>
-      <label>Tags (comma-separated)<input data-field="chips" placeholder="Python, Raspberry Pi, hardware" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
-      <label>Media URLs (one per line)<textarea data-field="media" rows="4">${escapeAttr((item.media || []).map((m) => m.src || '').join('\n'))}</textarea></label>
+      <label class="full">Tags (comma-separated)<input data-field="chips" placeholder="Python, Raspberry Pi, hardware" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
+      <div class="full">
+        <label>Upload images <span class="subtle">(stored in your database)</span><input type="file" data-field="mediaUpload" accept="image/*" multiple /></label>
+        <div class="admin-thumbs" data-thumbs></div>
+        <details><summary class="subtle">Advanced: edit media URLs</summary>
+          <textarea data-field="media" rows="4" placeholder="https://...  (one per line)">${escapeAttr(mediaUrls)}</textarea>
+        </details>
+      </div>
     `);
     card.querySelector('[data-field="category"]').value = item.category || 'software';
     const gearCb = card.querySelector('[data-field="showHardwareGear"]');
     if (gearCb) gearCb.checked = !!(item.showHardwareGear === true || item.showHardwareGear === 'true');
+    wireDateRange(card);
+    attachMediaUploader(card);
     card.querySelector('[data-action="remove"]').addEventListener('click', () => {
       const list = getFriendlyProjects();
       list.splice(index, 1);
@@ -964,17 +1113,26 @@
   }
 
   function eventEditorCard(item, index) {
+    const mediaUrls = (item.media || []).map((m) => m.src || '').filter(Boolean).join('\n');
     const card = makeFriendlyEditorCard(`Event ${index + 1}`, `
       <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
       <label>Slug<input data-field="slug" value="${escapeAttr(item.slug)}" /></label>
-      <label>Date<input data-field="dateLine" value="${escapeAttr(item.dateLine)}" /></label>
       <label>Bucket<select data-field="bucket"><option value="professional">Professional</option><option value="competitions">Competitions</option></select></label>
+      ${dateRangeFieldsHtml(item)}
       <label class="full">Summary<textarea data-field="summary" rows="3">${escapeAttr(item.summaryText)}</textarea></label>
       <label class="full">Details<textarea data-field="details" rows="4">${escapeAttr(item.detailText)}</textarea></label>
-      <label>Tags<input data-field="chips" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
-      <label>Media URLs (one per line)<textarea data-field="media" rows="4">${escapeAttr((item.media || []).map((m) => m.src || '').join('\n'))}</textarea></label>
+      <label class="full">Tags<input data-field="chips" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
+      <div class="full">
+        <label>Upload images <span class="subtle">(stored in your database)</span><input type="file" data-field="mediaUpload" accept="image/*" multiple /></label>
+        <div class="admin-thumbs" data-thumbs></div>
+        <details><summary class="subtle">Advanced: edit media URLs</summary>
+          <textarea data-field="media" rows="4" placeholder="https://...  (one per line)">${escapeAttr(mediaUrls)}</textarea>
+        </details>
+      </div>
     `);
     card.querySelector('[data-field="bucket"]').value = item.bucket || 'professional';
+    wireDateRange(card);
+    attachMediaUploader(card);
     card.querySelector('[data-action="remove"]').addEventListener('click', () => {
       const list = getFriendlyEvents();
       list.splice(index, 1);
@@ -988,13 +1146,14 @@
     const card = makeFriendlyEditorCard(`Experience ${index + 1}`, `
       <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
       <label>Slug<input data-field="slug" value="${escapeAttr(item.slug)}" /></label>
-      <label>Date<input data-field="dateLine" value="${escapeAttr(item.dateLine)}" /></label>
       <label>Section<select data-field="section"><option value="professional">Professional</option><option value="campus">Campus</option></select></label>
       <label>Meta<input data-field="meta" value="${escapeAttr(item.meta)}" /></label>
+      ${dateRangeFieldsHtml(item)}
       <label class="full">Bullets (one per line)<textarea data-field="bullets" rows="5">${escapeAttr((item.bullets || []).join('\n'))}</textarea></label>
-      <label>Tags<input data-field="chips" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
+      <label class="full">Tags<input data-field="chips" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
     `);
     card.querySelector('[data-field="section"]').value = item.section || 'professional';
+    wireDateRange(card);
     card.querySelector('[data-action="remove"]').addEventListener('click', () => {
       const list = getFriendlyExperience();
       list.splice(index, 1);
@@ -1116,15 +1275,34 @@
   }
 
   function certificationEditorCard(item, index, type) {
-    const card = makeFriendlyEditorCard(`${type === 'completed' ? 'Completed' : 'In Progress'} Cert ${index + 1}`, `
-      <label>Title<input data-field="text" value="${escapeAttr(item.text || '')}" /></label>
-      <label>Date / Expected<input data-field="date" value="${escapeAttr(item.date || item.expected || '')}" /></label>
-      <label class="full">Note<textarea data-field="note" rows="3">${escapeAttr(item.note || '')}</textarea></label>
+    const isCompleted = type === 'completed';
+    // Map any existing label text into a month-input value (best effort)
+    const issuedRaw = item.issued || item.date || '';
+    const expiresRaw = item.expires || '';
+    const expectedRaw = item.expected || item.date || '';
+    const issuedMonth = isoToMonthInput(issuedRaw) || isoToMonthInput(parseDateLineToRange(issuedRaw).start) || '';
+    const expiresMonth = isoToMonthInput(expiresRaw) || isoToMonthInput(parseDateLineToRange(expiresRaw).start) || '';
+    const expectedMonth = isoToMonthInput(expectedRaw) || isoToMonthInput(parseDateLineToRange(expectedRaw).start) || '';
+
+    const dateFieldsHtml = isCompleted
+      ? `
+        <label>Issued <span class="subtle">(optional)</span><input type="month" data-field="issuedMonth" value="${escapeAttr(issuedMonth)}" /></label>
+        <label>Expires <span class="subtle">(optional)</span><input type="month" data-field="expiresMonth" value="${escapeAttr(expiresMonth)}" /></label>
+      `
+      : `
+        <label>Started <span class="subtle">(optional)</span><input type="month" data-field="issuedMonth" value="${escapeAttr(issuedMonth)}" /></label>
+        <label>Expected <span class="subtle">(optional)</span><input type="month" data-field="expectedMonth" value="${escapeAttr(expectedMonth)}" /></label>
+      `;
+
+    const card = makeFriendlyEditorCard(`${isCompleted ? 'Completed' : 'In Progress'} Cert ${index + 1}`, `
+      <label class="full">Title<input data-field="text" value="${escapeAttr(item.text || '')}" /></label>
+      ${dateFieldsHtml}
+      <label class="full">Note<textarea data-field="note" rows="2">${escapeAttr(item.note || '')}</textarea></label>
     `);
     card.querySelector('[data-action="remove"]').addEventListener('click', () => {
-      const list = type === 'completed' ? getFriendlyCompletedCerts() : getFriendlyProgressCerts();
+      const list = isCompleted ? getFriendlyCompletedCerts() : getFriendlyProgressCerts();
       list.splice(index, 1);
-      if (type === 'completed') setFriendlyCompletedCerts(list);
+      if (isCompleted) setFriendlyCompletedCerts(list);
       else setFriendlyProgressCerts(list);
       renderFriendlyEditors();
     });
@@ -1147,18 +1325,25 @@
 
   function setFriendlyProjects(items) {
     const out = items.map((item, index) => {
+      const dateLine = (item.dateLine && item.dateLine.trim())
+        || dateLineFromRange(item.startMonth, item.endMonth, item.ongoing === true || item.ongoing === 'true')
+        || '';
+      const sortMs = monthInputToMs(item.endMonth) || monthInputToMs(item.startMonth) || parseTimelineSortMs(dateLine);
       const row = {
         slug: item.slug || makeSlug(item.title, `project-${index + 1}`),
         title: item.title || '',
-        dateLine: item.dateLine || '',
+        dateLine,
+        startMonth: item.startMonth || '',
+        endMonth: item.endMonth || '',
+        ongoing: item.ongoing === true || item.ongoing === 'true',
         category: item.category || 'software',
         summaryHtml: item.summaryText ? `<p>${item.summaryText}</p>` : '',
         detailHtml: item.detailText ? `<p>${item.detailText.split('\n').join('</p><p>')}</p>` : '',
         chips: splitComma(item.chips || ''),
         media: splitLines(item.media || '').map((src) => ({ type: 'image', src })),
-        timelineDateLabel: item.timelineDateLabel || item.dateLine || '',
+        timelineDateLabel: item.timelineDateLabel || dateLine || '',
         timelineEnabled: item.timelineEnabled !== false,
-        timelineSortMs: item.timelineSortMs || parseTimelineSortMs(item.dateLine || ''),
+        timelineSortMs: item.timelineSortMs || sortMs,
         orderIndex: item.orderIndex || 1000 - index,
       };
       if (item.showHardwareGear === true) row.showHardwareGear = true;
@@ -1176,20 +1361,29 @@
   }
 
   function setFriendlyEvents(items) {
-    const out = items.map((item, index) => ({
-      slug: item.slug || makeSlug(item.title, `event-${index + 1}`),
-      title: item.title || '',
-      dateLine: item.dateLine || '',
-      bucket: item.bucket || 'professional',
-      summaryHtml: item.summaryText ? `<p>${item.summaryText}</p>` : '',
-      detailHtml: item.detailText ? `<p>${item.detailText.split('\n').join('</p><p>')}</p>` : '',
-      chips: splitComma(item.chips || ''),
-      media: splitLines(item.media || '').map((src) => ({ type: 'image', src })),
-      timelineDateLabel: item.timelineDateLabel || item.dateLine || '',
-      timelineEnabled: item.timelineEnabled !== false,
-      timelineSortMs: item.timelineSortMs || parseTimelineSortMs(item.dateLine || ''),
-      orderIndex: item.orderIndex || 1000 - index,
-    }));
+    const out = items.map((item, index) => {
+      const dateLine = (item.dateLine && item.dateLine.trim())
+        || dateLineFromRange(item.startMonth, item.endMonth, item.ongoing === true || item.ongoing === 'true')
+        || '';
+      const sortMs = monthInputToMs(item.endMonth) || monthInputToMs(item.startMonth) || parseTimelineSortMs(dateLine);
+      return {
+        slug: item.slug || makeSlug(item.title, `event-${index + 1}`),
+        title: item.title || '',
+        dateLine,
+        startMonth: item.startMonth || '',
+        endMonth: item.endMonth || '',
+        ongoing: item.ongoing === true || item.ongoing === 'true',
+        bucket: item.bucket || 'professional',
+        summaryHtml: item.summaryText ? `<p>${item.summaryText}</p>` : '',
+        detailHtml: item.detailText ? `<p>${item.detailText.split('\n').join('</p><p>')}</p>` : '',
+        chips: splitComma(item.chips || ''),
+        media: splitLines(item.media || '').map((src) => ({ type: 'image', src })),
+        timelineDateLabel: item.timelineDateLabel || dateLine || '',
+        timelineEnabled: item.timelineEnabled !== false,
+        timelineSortMs: item.timelineSortMs || sortMs,
+        orderIndex: item.orderIndex || 1000 - index,
+      };
+    });
     setTextarea('bulk-events-json', out);
   }
 
@@ -1198,19 +1392,28 @@
   }
 
   function setFriendlyExperience(items) {
-    const out = items.map((item, index) => ({
-      slug: item.slug || makeSlug(item.title, `experience-${index + 1}`),
-      title: item.title || '',
-      meta: item.meta || '',
-      dateLine: item.dateLine || '',
-      section: item.section || 'professional',
-      bullets: Array.isArray(item.bullets) ? item.bullets : splitLines(item.bullets || ''),
-      chips: splitComma(item.chips || ''),
-      timelineDateLabel: item.timelineDateLabel || item.dateLine || '',
-      timelineEnabled: item.timelineEnabled !== false,
-      timelineSortMs: item.timelineSortMs || parseTimelineSortMs(item.dateLine || ''),
-      orderIndex: item.orderIndex || 1000 - index,
-    }));
+    const out = items.map((item, index) => {
+      const dateLine = (item.dateLine && item.dateLine.trim())
+        || dateLineFromRange(item.startMonth, item.endMonth, item.ongoing === true || item.ongoing === 'true')
+        || '';
+      const sortMs = monthInputToMs(item.endMonth) || monthInputToMs(item.startMonth) || parseTimelineSortMs(dateLine);
+      return {
+        slug: item.slug || makeSlug(item.title, `experience-${index + 1}`),
+        title: item.title || '',
+        meta: item.meta || '',
+        dateLine,
+        startMonth: item.startMonth || '',
+        endMonth: item.endMonth || '',
+        ongoing: item.ongoing === true || item.ongoing === 'true',
+        section: item.section || 'professional',
+        bullets: Array.isArray(item.bullets) ? item.bullets : splitLines(item.bullets || ''),
+        chips: splitComma(item.chips || ''),
+        timelineDateLabel: item.timelineDateLabel || dateLine || '',
+        timelineEnabled: item.timelineEnabled !== false,
+        timelineSortMs: item.timelineSortMs || sortMs,
+        orderIndex: item.orderIndex || 1000 - index,
+      };
+    });
     setTextarea('bulk-experience-json', out);
   }
 
@@ -1352,19 +1555,23 @@
   }
 
   function normalizeCertCompleted(c) {
-    if (typeof c === 'string') return { text: c, date: '', note: '' };
+    if (typeof c === 'string') return { text: c, date: '', issued: '', expires: '', note: '' };
     return {
       text: c.text || c.title || '',
       date: c.date || c.issued || c.earned || '',
+      issued: c.issued || c.date || c.earned || '',
+      expires: c.expires || c.expiry || '',
       note: c.note || '',
     };
   }
 
   function normalizeCertProgress(c) {
-    if (typeof c === 'string') return { text: c, date: '', note: '' };
+    if (typeof c === 'string') return { text: c, date: '', issued: '', expected: '', note: '' };
     return {
       text: c.text || c.title || '',
       date: c.date || c.expected || '',
+      issued: c.issued || c.started || '',
+      expected: c.expected || c.expectedBy || c.date || '',
       note: c.note || '',
     };
   }
@@ -1376,11 +1583,14 @@
 
   function setFriendlyCompletedCerts(items) {
     const certifications = parseFieldJson('certifications-json-field', {});
-    certifications.completed = items.map((item) => ({
-      text: item.text || '',
-      date: item.date || '',
-      note: item.note || '',
-    }));
+    certifications.completed = items.map((item) => {
+      const issued = monthInputToLabel(item.issuedMonth) || item.issued || item.date || '';
+      const expires = monthInputToLabel(item.expiresMonth) || item.expires || '';
+      const out = { text: item.text || '', note: item.note || '' };
+      if (issued) out.issued = issued;
+      if (expires) out.expires = expires;
+      return out;
+    });
     setTextarea('certifications-json-field', certifications);
   }
 
@@ -1391,11 +1601,14 @@
 
   function setFriendlyProgressCerts(items) {
     const certifications = parseFieldJson('certifications-json-field', {});
-    certifications.inProgress = items.map((item) => ({
-      text: item.text || '',
-      expected: item.date || item.expected || '',
-      note: item.note || '',
-    }));
+    certifications.inProgress = items.map((item) => {
+      const issued = monthInputToLabel(item.issuedMonth) || item.issued || '';
+      const expected = monthInputToLabel(item.expectedMonth) || item.expected || item.date || '';
+      const out = { text: item.text || '', note: item.note || '' };
+      if (issued) out.issued = issued;
+      if (expected) out.expected = expected;
+      return out;
+    });
     setTextarea('certifications-json-field', certifications);
   }
 
@@ -1525,11 +1738,17 @@
     const collectFromCards = (containerId, mapper) =>
       [...document.querySelectorAll(`#${containerId} .admin-editor-card`)].map(mapper);
 
+    const readDateRange = (card) => ({
+      startMonth: card.querySelector('[data-field="startMonth"]')?.value || '',
+      endMonth: card.querySelector('[data-field="endMonth"]')?.value || '',
+      ongoing: !!card.querySelector('[data-field="ongoing"]')?.checked,
+      dateLine: card.querySelector('[data-field="dateLine"]')?.value.trim() || '',
+    });
     setFriendlyProjects(
       collectFromCards('friendly-project-list', (card) => ({
         title: card.querySelector('[data-field="title"]').value.trim(),
         slug: card.querySelector('[data-field="slug"]').value.trim(),
-        dateLine: card.querySelector('[data-field="dateLine"]').value.trim(),
+        ...readDateRange(card),
         category: card.querySelector('[data-field="category"]').value,
         showHardwareGear: !!card.querySelector('[data-field="showHardwareGear"]')?.checked,
         summaryText: card.querySelector('[data-field="summary"]').value.trim(),
@@ -1542,7 +1761,7 @@
       collectFromCards('friendly-event-list', (card) => ({
         title: card.querySelector('[data-field="title"]').value.trim(),
         slug: card.querySelector('[data-field="slug"]').value.trim(),
-        dateLine: card.querySelector('[data-field="dateLine"]').value.trim(),
+        ...readDateRange(card),
         bucket: card.querySelector('[data-field="bucket"]').value,
         summaryText: card.querySelector('[data-field="summary"]').value.trim(),
         detailText: card.querySelector('[data-field="details"]').value.trim(),
@@ -1554,7 +1773,7 @@
       collectFromCards('friendly-experience-list', (card) => ({
         title: card.querySelector('[data-field="title"]').value.trim(),
         slug: card.querySelector('[data-field="slug"]').value.trim(),
-        dateLine: card.querySelector('[data-field="dateLine"]').value.trim(),
+        ...readDateRange(card),
         section: card.querySelector('[data-field="section"]').value,
         meta: card.querySelector('[data-field="meta"]').value.trim(),
         bullets: card.querySelector('[data-field="bullets"]').value.trim(),
@@ -1584,14 +1803,16 @@
     setFriendlyCompletedCerts(
       collectFromCards('friendly-cert-completed-list', (card) => ({
         text: card.querySelector('[data-field="text"]').value.trim(),
-        date: card.querySelector('[data-field="date"]').value.trim(),
+        issuedMonth: card.querySelector('[data-field="issuedMonth"]')?.value || '',
+        expiresMonth: card.querySelector('[data-field="expiresMonth"]')?.value || '',
         note: card.querySelector('[data-field="note"]').value.trim(),
       }))
     );
     setFriendlyProgressCerts(
       collectFromCards('friendly-cert-progress-list', (card) => ({
         text: card.querySelector('[data-field="text"]').value.trim(),
-        date: card.querySelector('[data-field="date"]').value.trim(),
+        issuedMonth: card.querySelector('[data-field="issuedMonth"]')?.value || '',
+        expectedMonth: card.querySelector('[data-field="expectedMonth"]')?.value || '',
         note: card.querySelector('[data-field="note"]').value.trim(),
       }))
     );
@@ -1716,9 +1937,9 @@
     const openMediaBtn = document.getElementById('open-media-tab-btn');
 
     const addTemplates = {
-      'friendly-add-project': [getFriendlyProjects, setFriendlyProjects, { title: '', slug: '', dateLine: '', category: 'software', summaryText: '', detailText: '', chips: '', media: '' }],
-      'friendly-add-event': [getFriendlyEvents, setFriendlyEvents, { title: '', slug: '', dateLine: '', bucket: 'professional', summaryText: '', detailText: '', chips: '', media: '' }],
-      'friendly-add-experience': [getFriendlyExperience, setFriendlyExperience, { title: '', slug: '', dateLine: '', section: 'professional', meta: '', bullets: [], chips: '' }],
+      'friendly-add-project': [getFriendlyProjects, setFriendlyProjects, { title: '', slug: '', dateLine: '', startMonth: '', endMonth: '', ongoing: false, category: 'software', summaryText: '', detailText: '', chips: '', media: '' }],
+      'friendly-add-event': [getFriendlyEvents, setFriendlyEvents, { title: '', slug: '', dateLine: '', startMonth: '', endMonth: '', ongoing: false, bucket: 'professional', summaryText: '', detailText: '', chips: '', media: '' }],
+      'friendly-add-experience': [getFriendlyExperience, setFriendlyExperience, { title: '', slug: '', dateLine: '', startMonth: '', endMonth: '', ongoing: false, section: 'professional', meta: '', bullets: [], chips: '' }],
       'friendly-add-role': [getFriendlyRoles, setFriendlyRoles, { title: '', slug: '', timelineDateLabel: '', summaryText: '' }],
       'friendly-add-highlight': [getFriendlyQuickHighlights, setFriendlyQuickHighlights, { title: '', bodyText: '' }],
       'friendly-add-competency': [getFriendlyCompetencies, setFriendlyCompetencies, { kicker: '', subtle: '' }],
