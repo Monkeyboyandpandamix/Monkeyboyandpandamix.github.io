@@ -561,6 +561,21 @@
     });
   }
 
+  function applyPanelCopy(panel, config) {
+    if (!panel || !config || typeof config !== 'object') return;
+    const heading = panel.querySelector('.page-title');
+    if (heading && config.heading) heading.textContent = config.heading;
+    if (config.intro) {
+      let subtle = panel.querySelector('.subtle');
+      if (!subtle) {
+        subtle = document.createElement('p');
+        subtle.className = 'subtle';
+        panel.appendChild(subtle);
+      }
+      subtle.textContent = config.intro;
+    }
+  }
+
   function renderData(data) {
     if (!data) return;
 
@@ -598,20 +613,15 @@
       applyAchievementGrid(payload.achievementCards);
     }
 
-    applyTextConfig(cfg.projectsPage, [
-      ['heading', 'main .section.panel .page-title', 'text'],
-      ['intro', 'main .section.panel .subtle', 'text'],
-    ]);
-    applyTextConfig(cfg.timelinePage, [
-      ['heading', 'main .section.panel .page-title', 'text'],
-      ['intro', 'main .section.panel .subtle', 'text'],
-    ]);
-    applyTextConfig(cfg.achievementsPage, [
-      ['heading', 'main .section.panel .page-title', 'text'],
-      ['intro', 'main .section.panel .subtle', 'text'],
-      ['editableHeading', 'main .section.panel + .section.panel .page-title', 'text'],
-      ['editableIntro', 'main .section.panel + .section.panel .subtle', 'text'],
-    ]);
+    if (path === 'projects.html') applyPanelCopy(document.querySelector('main .section.panel'), cfg.projectsPage);
+    if (path === 'timeline.html') applyPanelCopy(document.querySelector('main .section.panel'), cfg.timelinePage);
+    if (path === 'achievements.html') {
+      applyPanelCopy(document.querySelector('main .section.panel'), cfg.achievementsPage);
+      applyTextConfig(cfg.achievementsPage, [
+        ['editableHeading', 'main .section.panel + .section.panel .page-title', 'text'],
+        ['editableIntro', 'main .section.panel + .section.panel .subtle', 'text'],
+      ]);
+    }
 
     if (path === 'experience.html' && Array.isArray(data.experience) && data.experience.length) {
       applyExperienceMount(data.experience);
@@ -673,17 +683,11 @@
     if (payload && payload.resumeUrl) applyResumeLinks(payload.resumeUrl);
 
     if (path === 'events.html') {
-      applyTextConfig(cfg.eventsPage, [
-        ['heading', 'main .section.panel .page-title', 'text'],
-        ['intro', 'main .section.panel .subtle', 'text'],
-      ]);
+      applyPanelCopy(document.querySelector('main .section.panel'), cfg.eventsPage);
     }
 
     if (path === 'experience.html') {
-      applyTextConfig(cfg.experiencePage, [
-        ['heading', 'main .section.panel .page-title', 'text'],
-        ['intro', 'main .section.panel .subtle', 'text'],
-      ]);
+      applyPanelCopy(document.querySelector('main .section.panel'), cfg.experiencePage);
       const mount = document.getElementById('experience-dynamic-mount');
       if (mount && !mount.hidden && cfg.experiencePage && typeof cfg.experiencePage === 'object') {
         const headings = mount.querySelectorAll('.page-title');

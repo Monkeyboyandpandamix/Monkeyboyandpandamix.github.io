@@ -543,9 +543,12 @@
     if (help) {
       help.innerHTML = `
         <p class="subtle"><strong>Projects / events / experience:</strong> add <code>media</code>: <code>[{ type: "image"|"video"|"youtube"|"link", src, caption?, alt? }]</code> and optional <code>actions</code>: <code>[{ label, href, variant?, external? }]</code>.</p>
+        <p class="subtle"><strong>Projects tagging:</strong> use <code>chips</code>: <code>["AI","Hardware","Security"]</code> for visible tags and <code>category</code>: <code>hardware</code> | <code>software</code> | <code>hybrid</code> for filtering.</p>
         <p class="subtle"><strong>Timeline:</strong> entries auto-link by <code>slug</code>. Use <code>timelineSortMs</code> for exact ordering, or let the site infer order from <code>dateLine</code>. Optional <code>timelineLinkKind</code>: <code>project</code> | <code>event</code> | <code>experience</code> | <code>external</code> | <code>custom</code>.</p>
         <p class="subtle"><strong>Experience entries:</strong> <code>section</code>: <code>professional</code> or <code>campus</code>; <code>orderIndex</code> (higher = closer to top). Experience rows now auto-feed the timeline when they have a date.</p>
         <p class="subtle"><strong>Events:</strong> <code>bucket</code>: <code>professional</code> | <code>competitions</code>.</p>
+        <p class="subtle"><strong>Coursework:</strong> use <code>courseworkPage.institutions</code> for schools and per-school course groups. Use <code>noteHtml</code> for Coursework Note.</p>
+        <p class="subtle"><strong>Contact / collaboration:</strong> use <code>contactPage.actions</code> and <code>contactPage.cards</code> to control links, emails, profile URLs, and contact methods.</p>
       `;
     }
   };

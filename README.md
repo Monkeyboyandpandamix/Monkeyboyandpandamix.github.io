@@ -45,3 +45,12 @@ Your site URL format:
 - Deploy RTDB rules with `firebase deploy --only database`.
 - Firestore rules remain in the repo if you want to keep the existing Firestore copy, but the live site no longer depends on Firestore.
 - Firebase Storage must be initialized in the Firebase console before resume uploads and `storage.rules` deployment will work.
+
+## What Is Database-Editable
+- `experiencePage` plus `site_experience`: Experience page heading/intro, professional/campus section titles, cards, media, actions, and timeline participation.
+- `courseworkPage`: Academic Coursework title/subtitle, schools, course groups, and Coursework Note.
+- `site_projects` plus `projectsPage`: Key Projects & Technical Work heading/intro, per-project tags via `chips`, category filtering via `category`, media, actions, and timeline auto-linking.
+- `site_events` plus `eventsPage`: Professional Events & Networking heading/intro and Capture The Flags & Hackathons Attended heading/intro.
+- `achievementCards`, `achievementsPage`, `achievementsBlocks`: Achievements & Recognition and Future / Portal-Managed Blocks.
+- `contactPage`: Interested in collaborating, links, contact methods, and profile cards.
+- `theme`: site colors and page theme variables. Accessibility color overrides still take precedence in the browser session.
