@@ -1652,6 +1652,7 @@
       const value = document.getElementById('friendly-contact-intro')?.value?.trim() || '';
       return value ? `<p>${value.split('\n').join('</p><p>')}</p>` : '';
     })();
+    contact.email = document.getElementById('friendly-contact-email')?.value?.trim() || '';
     setTextarea('contact-page-json-field', contact);
     const coursework = parseFieldJson('coursework-page-json-field', {});
     coursework.panelTitle = document.getElementById('friendly-coursework-heading')?.value?.trim() || '';
@@ -1697,6 +1698,7 @@
     setFriendlyInput('friendly-experience-campus-heading', experiencePage.campusHeading || '');
     setFriendlyInput('friendly-achievements-heading', achievementsPage.heading || '');
     setFriendlyInput('friendly-contact-heading', contact.heading || '');
+    setFriendlyInput('friendly-contact-email', contact.email || '');
     setFriendlyInput('friendly-contact-intro', htmlToText(contact.introHtml || contact.intro || ''));
     setFriendlyInput('friendly-coursework-heading', coursework.panelTitle || '');
     setFriendlyInput('friendly-coursework-subtitle', coursework.panelSubtitle || '');

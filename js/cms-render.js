@@ -592,6 +592,27 @@
     safeSwap(fb, mount, `${header}${body}${globalNote}`);
   }
 
+  /**
+   * Update every mailto: link site-wide AND any visible plain-text email so the
+   * admin's "Contact Email" field is the single source of truth across the site.
+   */
+  function applyContactEmail(email) {
+    const clean = String(email || '').trim();
+    if (!clean) return;
+    document.querySelectorAll('a[href^="mailto:"]').forEach((a) => {
+      const old = a.getAttribute('href') || '';
+      const tail = old.includes('?') ? old.slice(old.indexOf('?')) : '';
+      a.setAttribute('href', `mailto:${clean}${tail}`);
+      const txt = (a.textContent || '').trim();
+      if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(txt)) {
+        a.textContent = clean;
+      }
+    });
+    document.querySelectorAll('[data-cms-email]').forEach((el) => {
+      el.textContent = clean;
+    });
+  }
+
   /** Featured Articles (news/press) — rendered on achievements.html. */
   function applyFeaturedArticles(items) {
     const mount = document.getElementById('featured-articles-dynamic');
@@ -750,6 +771,13 @@
       applyContactPage(cfg.contactPage);
     }
 
+    // Contact email: site-wide override of every mailto link from the admin field.
+    const contactEmail = (cfg.contactPage && cfg.contactPage.email) || cfg.contactEmail;
+    if (contactEmail) applyContactEmail(contactEmail);
+
+    // Projects, Events, and Timeline are CMS-driven (admin is the source of truth).
+    // Always swap when CMS has data, regardless of static richness, so admin edits
+    // are visibly reflected. Other pages keep the safeSwap guard.
     const projects = data.projects || [];
     const mountP = document.getElementById('projects-dynamic-mount');
     const fbP = document.getElementById('projects-static-fallback');
@@ -763,7 +791,9 @@
         })
         .map(buildProjectCard)
         .join('');
-      safeSwap(fbP, mountP, projHtml);
+      mountP.innerHTML = projHtml;
+      mountP.hidden = false;
+      fbP.hidden = true;
     }
 
     const events = data.events || [];
@@ -780,15 +810,18 @@
       if (comp.length) {
         html += `<section class="section panel reveal"><h2 class="page-title">${escapeHtml(eventsPageCfg.competitionsHeading || 'Capture The Flags & Hackathons Attended')}</h2><p class="subtle">${escapeHtml(eventsPageCfg.competitionsIntro || 'Competition and challenge events focused on practical cybersecurity and collaborative problem solving.')}</p></section><section class="section stack reveal">${comp.map(buildEventCard).join('')}</section>`;
       }
-      const eventsHtml = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
-      safeSwap(fbE, mountE, eventsHtml);
+      mountE.innerHTML = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
+      mountE.hidden = false;
+      fbE.hidden = true;
     }
 
     const timelineRows = mergeTimelineRows(data, settings);
     const mountT = document.getElementById('timeline-dynamic-mount');
     const fbT = document.getElementById('timeline-static-fallback');
     if (mountT && fbT && timelineRows.length) {
-      safeSwap(fbT, mountT, timelineRows.map(buildTimelineArticle).join(''));
+      mountT.innerHTML = timelineRows.map(buildTimelineArticle).join('');
+      mountT.hidden = false;
+      fbT.hidden = true;
     }
 
     if (payload && payload.resumeUrl) applyResumeLinks(payload.resumeUrl);
