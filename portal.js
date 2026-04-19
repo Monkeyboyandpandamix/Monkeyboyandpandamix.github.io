@@ -601,6 +601,11 @@ function collectCmsFirestoreExtras() {
     ['competencies-json-field', 'competencies'],
     ['contact-page-json-field', 'contactPage'],
     ['coursework-page-json-field', 'courseworkPage'],
+    ['projects-page-json-field', 'projectsPage'],
+    ['events-page-json-field', 'eventsPage'],
+    ['timeline-page-json-field', 'timelinePage'],
+    ['experience-page-json-field', 'experiencePage'],
+    ['achievements-page-json-field', 'achievementsPage'],
     ['achievement-cards-json-field', 'achievementCards'],
   ];
   fields.forEach(([id, key]) => {

@@ -414,6 +414,15 @@ def build_config(index_doc, contact_doc, coursework_doc, achievements_doc):
     }
 
 
+def build_simple_page_config(doc, selectors):
+    out = {}
+    for key, xpath in selectors:
+        value = text(doc, xpath)
+        if value:
+            out[key] = value
+    return out
+
+
 def firestore_value(value):
     if value is None:
         return {"nullValue": None}

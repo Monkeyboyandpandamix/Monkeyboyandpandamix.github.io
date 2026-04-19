@@ -1,0 +1,23 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+    "config": {
+      "site": {
+        ".write": "auth != null && auth.token.email === 'maghamohammadi@guilford.edu'"
+      }
+    },
+    "site_projects": {
+      ".write": "auth != null && auth.token.email === 'maghamohammadi@guilford.edu'"
+    },
+    "site_events": {
+      ".write": "auth != null && auth.token.email === 'maghamohammadi@guilford.edu'"
+    },
+    "site_roles": {
+      ".write": "auth != null && auth.token.email === 'maghamohammadi@guilford.edu'"
+    },
+    "site_experience": {
+      ".write": "auth != null && auth.token.email === 'maghamohammadi@guilford.edu'"
+    }
+  }
+}

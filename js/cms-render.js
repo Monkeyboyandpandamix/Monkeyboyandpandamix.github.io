@@ -25,6 +25,25 @@
     return Number.isFinite(n) ? n : 0;
   }
 
+  function inferTimelineSortMs(entry) {
+    const explicit = parseSortMs(entry?.timelineSortMs);
+    if (explicit) return explicit;
+    const raw = String(entry?.timelineDateLabel || entry?.dateLine || entry?.dateLabel || '').trim();
+    if (!raw) return 0;
+    const cleaned = raw.split(' - ')[0].replace(/\bPresent\b/gi, '').trim();
+    const attempts = [cleaned, `${cleaned} 1`, `1 ${cleaned}`].filter(Boolean);
+    for (const attempt of attempts) {
+      const ms = Date.parse(attempt);
+      if (Number.isFinite(ms)) return ms;
+    }
+    const yearMatch = cleaned.match(/\b(19|20)\d{2}\b/);
+    if (yearMatch) {
+      const ms = Date.parse(`January 1, ${yearMatch[0]}`);
+      if (Number.isFinite(ms)) return ms;
+    }
+    return 0;
+  }
+
   /** Resolve timeline link: internal project/event/experience slug or external URL. */
   function timelineHref(entry, kind) {
     if (entry.timelineHref) return entry.timelineHref;
@@ -39,6 +58,68 @@
     if (kind === 'event') return `./events.html#${slug}`;
     if (kind === 'role') return entry.href || `./experience.html#${slug}`;
     return '#';
+  }
+
+  function renderActions(actions, fallbackLabel) {
+    const list = Array.isArray(actions) ? actions : [];
+    if (!list.length) return '';
+    const html = list
+      .map((action) => {
+        if (!action || typeof action !== 'object' || !action.href) return '';
+        const cls = action.variant === 'primary' ? 'btn primary' : 'btn ghost';
+        const ext = action.external ? ' target="_blank" rel="noopener"' : '';
+        const label = escapeHtml(action.label || fallbackLabel || 'Open');
+        return `<a class="${cls}" href="${escapeAttr(action.href)}"${ext}>${label}</a>`;
+      })
+      .filter(Boolean)
+      .join('');
+    return html ? `<div class="actions cms-actions">${html}</div>` : '';
+  }
+
+  function toYoutubeEmbed(url) {
+    const u = String(url || '').trim();
+    if (!u) return '';
+    const short = u.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+    if (short) return `https://www.youtube.com/embed/${short[1]}`;
+    const long = u.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+    if (long) return `https://www.youtube.com/embed/${long[1]}`;
+    const embed = u.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/);
+    if (embed) return u;
+    return '';
+  }
+
+  function renderMediaGallery(items) {
+    const media = Array.isArray(items) ? items : [];
+    if (!media.length) return '';
+    const tiles = media
+      .map((m) => {
+        if (!m || typeof m !== 'object' || !m.src) return '';
+        const type = String(m.type || 'image').trim().toLowerCase();
+        const caption = m.caption ? `<figcaption>${escapeHtml(m.caption)}</figcaption>` : '';
+        const alt = escapeAttr(m.alt || m.caption || 'media');
+        if (type === 'youtube') {
+          const embed = toYoutubeEmbed(m.src);
+          if (!embed) return '';
+          return `<div class="video-embed media-item"><iframe src="${escapeAttr(embed)}" title="${alt}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+        }
+        if (type === 'video') {
+          return `<figure class="media-item"><video controls preload="metadata" src="${escapeAttr(m.src)}"></video>${caption}</figure>`;
+        }
+        if (type === 'link') {
+          const label = escapeHtml(m.caption || m.label || 'Open link');
+          return `<div class="media-item media-link"><a class="btn ghost" href="${escapeAttr(m.src)}" target="_blank" rel="noopener">${label}</a></div>`;
+        }
+        return `<figure class="media-item"><img loading="lazy" decoding="async" src="${escapeAttr(m.src)}" alt="${alt}" />${caption}</figure>`;
+      })
+      .filter(Boolean)
+      .join('');
+    return tiles ? `<div class="media-gallery cms-media-gallery"><div class="media-grid">${tiles}</div></div>` : '';
+  }
+
+  function buildLearnMoreAction(entry, kind) {
+    const href = timelineHref(entry, kind);
+    if (!href || href === '#') return '';
+    return `<div class="actions cms-actions"><a class="btn ghost" href="${escapeAttr(href)}">Learn more</a></div>`;
   }
 
   function clearCmsThemeInlineVars() {
@@ -109,7 +190,9 @@
         return `<span${hw}>${label}</span>`;
       })
       .join('');
-    return `<article id="${slug}" class="card" data-project-category="${escapeAttr(cat)}"><h3>${title}</h3>${meta}${dateLine}${purpose}${detail}<div class="chips">${chips}</div></article>`;
+    const media = renderMediaGallery(p.media);
+    const actions = renderActions(p.actions, 'Open') || buildLearnMoreAction(p, 'project');
+    return `<article id="${slug}" class="card" data-project-category="${escapeAttr(cat)}"><h3>${title}</h3>${meta}${dateLine}${purpose}${detail}${media}${actions}<div class="chips">${chips}</div></article>`;
   }
 
   function buildEventCard(e) {
@@ -121,7 +204,9 @@
     const detail = e.detailHtml ? `<details><summary>Expand details</summary>${e.detailHtml}</details>` : '';
     const chipsArr = Array.isArray(e.chips) ? e.chips : [];
     const chips = chipsArr.map((t) => `<span>${escapeHtml(t)}</span>`).join('');
-    return `<article id="${slug}" class="card"><h3>${title}</h3>${meta}${dateLine}${body}${detail}<div class="chips">${chips}</div></article>`;
+    const media = renderMediaGallery(e.media);
+    const actions = renderActions(e.actions, 'Open') || buildLearnMoreAction(e, 'event');
+    return `<article id="${slug}" class="card"><h3>${title}</h3>${meta}${dateLine}${body}${detail}${media}${actions}<div class="chips">${chips}</div></article>`;
   }
 
   function buildExperienceArticle(ex) {
@@ -137,19 +222,30 @@
       .map((c) => `<span>${escapeHtml(c)}</span>`)
       .join('');
     const chipsHtml = chips ? `<div class="chips">${chips}</div>` : '';
-    return `<article id="${slug}" class="card"><h3>${title}</h3>${meta}${dateLine}${ul}${chipsHtml}</article>`;
+    const summary = ex.summaryHtml ? `<div class="cms-experience-summary">${ex.summaryHtml}</div>` : '';
+    const detail = ex.detailHtml ? `<details><summary>Expand details</summary>${ex.detailHtml}</details>` : '';
+    const media = renderMediaGallery(ex.media);
+    const actions = renderActions(ex.actions, 'Open');
+    return `<article id="${slug}" class="card"><h3>${title}</h3>${meta}${dateLine}${summary}${ul}${detail}${media}${actions}${chipsHtml}</article>`;
   }
 
   function mergeTimelineRows(data, settings) {
     const hideProjects = !!(settings && settings.timelineHideProjects);
-    const rows = [];
+    const rowsByKey = new Map();
+
+    function upsertRow(key, row) {
+      const existing = rowsByKey.get(key);
+      if (!existing || (Number(row.timelineSortMs) || 0) >= (Number(existing.timelineSortMs) || 0)) {
+        rowsByKey.set(key, row);
+      }
+    }
 
     (data.projects || []).forEach((p) => {
       if (hideProjects) return;
       if (p.timelineEnabled === false) return;
-      const ms = parseSortMs(p.timelineSortMs);
+      const ms = inferTimelineSortMs(p);
       if (!ms) return;
-      rows.push({
+      upsertRow(`project:${p.slug || p.id || p.title || ms}`, {
         kind: 'project',
         timelineSortMs: ms,
         timelineDateLabel: p.timelineDateLabel || p.dateLine || '',
@@ -161,9 +257,9 @@
 
     (data.events || []).forEach((ev) => {
       if (ev.timelineEnabled === false) return;
-      const ms = parseSortMs(ev.timelineSortMs);
+      const ms = inferTimelineSortMs(ev);
       if (!ms) return;
-      rows.push({
+      upsertRow(`event:${ev.slug || ev.id || ev.title || ms}`, {
         kind: 'event',
         timelineSortMs: ms,
         timelineDateLabel: ev.timelineDateLabel || ev.dateLine || '',
@@ -175,9 +271,9 @@
 
     (data.roles || []).forEach((r) => {
       if (r.timelineEnabled === false) return;
-      const ms = parseSortMs(r.timelineSortMs);
+      const ms = inferTimelineSortMs(r);
       if (!ms) return;
-      rows.push({
+      upsertRow(`role:${r.slug || r.id || r.title || ms}`, {
         kind: 'role',
         timelineSortMs: ms,
         timelineDateLabel: r.timelineDateLabel || r.dateLabel || '',
@@ -187,6 +283,21 @@
       });
     });
 
+    (data.experience || []).forEach((ex) => {
+      if (ex.timelineEnabled === false) return;
+      const ms = inferTimelineSortMs(ex);
+      if (!ms) return;
+      upsertRow(`role:${ex.slug || ex.id || ex.title || ms}`, {
+        kind: 'role',
+        timelineSortMs: ms,
+        timelineDateLabel: ex.timelineDateLabel || ex.dateLine || '',
+        title: ex.title || '',
+        summary: stripHtml(ex.summaryHtml) || (Array.isArray(ex.bullets) ? ex.bullets[0] || '' : ''),
+        href: timelineHref({ ...ex, timelineLinkKind: ex.timelineLinkKind || 'experience' }, 'role'),
+      });
+    });
+
+    const rows = [...rowsByKey.values()];
     rows.sort((a, b) => b.timelineSortMs - a.timelineSortMs);
     return rows;
   }
@@ -438,16 +549,19 @@
       .join('');
   }
 
-  async function run() {
-    if (!window.CmsApi || !window.CmsApi.firebaseConfigured()) return;
-    window.CmsApi.initFirebase();
-    let data;
-    try {
-      data = await window.CmsApi.loadAllCmsData();
-    } catch (err) {
-      console.warn('[CMS] load failed', err);
-      return;
-    }
+  function applyTextConfig(config, selectors) {
+    if (!config || typeof config !== 'object') return;
+    selectors.forEach(([key, selector, prop]) => {
+      const value = config[key];
+      if (!value) return;
+      const el = document.querySelector(selector);
+      if (!el) return;
+      if (prop === 'html') el.innerHTML = value;
+      else el.textContent = value;
+    });
+  }
+
+  function renderData(data) {
     if (!data) return;
 
     window.__cmsData = data;
@@ -484,6 +598,21 @@
       applyAchievementGrid(payload.achievementCards);
     }
 
+    applyTextConfig(cfg.projectsPage, [
+      ['heading', 'main .section.panel .page-title', 'text'],
+      ['intro', 'main .section.panel .subtle', 'text'],
+    ]);
+    applyTextConfig(cfg.timelinePage, [
+      ['heading', 'main .section.panel .page-title', 'text'],
+      ['intro', 'main .section.panel .subtle', 'text'],
+    ]);
+    applyTextConfig(cfg.achievementsPage, [
+      ['heading', 'main .section.panel .page-title', 'text'],
+      ['intro', 'main .section.panel .subtle', 'text'],
+      ['editableHeading', 'main .section.panel + .section.panel .page-title', 'text'],
+      ['editableIntro', 'main .section.panel + .section.panel .subtle', 'text'],
+    ]);
+
     if (path === 'experience.html' && Array.isArray(data.experience) && data.experience.length) {
       applyExperienceMount(data.experience);
     }
@@ -519,12 +648,13 @@
     if (mountE && fbE && events.length) {
       const prof = events.filter((e) => (e.bucket || 'professional') !== 'competitions');
       const comp = events.filter((e) => (e.bucket || '') === 'competitions');
+      const eventsPageCfg = cfg.eventsPage && typeof cfg.eventsPage === 'object' ? cfg.eventsPage : {};
       let html = '';
       if (prof.length) {
         html += `<section class="section stack reveal">${prof.map(buildEventCard).join('')}</section>`;
       }
       if (comp.length) {
-        html += `<section class="section panel reveal"><h2 class="page-title">Capture The Flags & Hackathons Attended</h2><p class="subtle">Competition and challenge events focused on practical cybersecurity and collaborative problem solving.</p></section><section class="section stack reveal">${comp.map(buildEventCard).join('')}</section>`;
+        html += `<section class="section panel reveal"><h2 class="page-title">${escapeHtml(eventsPageCfg.competitionsHeading || 'Capture The Flags & Hackathons Attended')}</h2><p class="subtle">${escapeHtml(eventsPageCfg.competitionsIntro || 'Competition and challenge events focused on practical cybersecurity and collaborative problem solving.')}</p></section><section class="section stack reveal">${comp.map(buildEventCard).join('')}</section>`;
       }
       mountE.innerHTML = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
       mountE.hidden = false;
@@ -542,11 +672,55 @@
 
     if (payload && payload.resumeUrl) applyResumeLinks(payload.resumeUrl);
 
+    if (path === 'events.html') {
+      applyTextConfig(cfg.eventsPage, [
+        ['heading', 'main .section.panel .page-title', 'text'],
+        ['intro', 'main .section.panel .subtle', 'text'],
+      ]);
+    }
+
+    if (path === 'experience.html') {
+      applyTextConfig(cfg.experiencePage, [
+        ['heading', 'main .section.panel .page-title', 'text'],
+        ['intro', 'main .section.panel .subtle', 'text'],
+      ]);
+      const mount = document.getElementById('experience-dynamic-mount');
+      if (mount && !mount.hidden && cfg.experiencePage && typeof cfg.experiencePage === 'object') {
+        const headings = mount.querySelectorAll('.page-title');
+        if (headings[0] && cfg.experiencePage.professionalHeading) headings[0].textContent = cfg.experiencePage.professionalHeading;
+        if (headings[1] && cfg.experiencePage.campusHeading) headings[1].textContent = cfg.experiencePage.campusHeading;
+      }
+    }
+
     window.dispatchEvent(new CustomEvent('mam-cms-ready', { detail: data }));
 
     if (typeof window.mamReinitAfterCms === 'function') {
       window.mamReinitAfterCms();
     }
+  }
+
+  async function run() {
+    if (!window.CmsApi || !window.CmsApi.firebaseConfigured()) return;
+    window.CmsApi.initFirebase();
+    if (typeof window.CmsApi.watchAllCmsData === 'function') {
+      window.CmsApi.watchAllCmsData((data) => {
+        try {
+          renderData(data);
+        } catch (err) {
+          console.warn('[CMS] render failed', err);
+        }
+      });
+      return;
+    }
+
+    let data;
+    try {
+      data = await window.CmsApi.loadAllCmsData();
+    } catch (err) {
+      console.warn('[CMS] load failed', err);
+      return;
+    }
+    renderData(data);
   }
 
   window.MamCms = window.MamCms || {};

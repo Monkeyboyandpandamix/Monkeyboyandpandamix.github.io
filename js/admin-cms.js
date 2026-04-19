@@ -1,8 +1,7 @@
 /**
- * Extended admin: Firestore resume, config JSON fields, collection bulk publish.
+ * Extended admin: Realtime Database resume, config JSON fields, collection bulk publish.
  */
 (function () {
-  const BATCH_MAX = 450;
   const STATIC_PAGES = [
     'index.html',
     'projects.html',
@@ -21,7 +20,7 @@
     else el.value = JSON.stringify(value, null, 2);
   }
 
-  async function fillFormFromFirestore() {
+  async function fillFormFromFirebase() {
     let data;
     try {
       data = await window.CmsApi.loadAllCmsData();
@@ -41,22 +40,17 @@
     setTextarea('competencies-json-field', c.competencies);
     setTextarea('contact-page-json-field', c.contactPage);
     setTextarea('coursework-page-json-field', c.courseworkPage);
+    setTextarea('projects-page-json-field', c.projectsPage);
+    setTextarea('events-page-json-field', c.eventsPage);
+    setTextarea('timeline-page-json-field', c.timelinePage);
+    setTextarea('experience-page-json-field', c.experiencePage);
+    setTextarea('achievements-page-json-field', c.achievementsPage);
     setTextarea('achievement-cards-json-field', c.achievementCards);
 
     setTextarea('bulk-projects-json', data.projects);
     setTextarea('bulk-events-json', data.events);
     setTextarea('bulk-roles-json', data.roles);
     setTextarea('bulk-experience-json', data.experience);
-  }
-
-  async function deleteCollectionDocs(db, collectionName) {
-    const snap = await db.collection(collectionName).get();
-    const refs = snap.docs.map((d) => d.ref);
-    for (let i = 0; i < refs.length; i += BATCH_MAX) {
-      const batch = db.batch();
-      refs.slice(i, i + BATCH_MAX).forEach((ref) => batch.delete(ref));
-      await batch.commit();
-    }
   }
 
   async function publishCollection(collection, rawJson, idField) {
@@ -67,29 +61,7 @@
       throw new Error(`Invalid JSON for ${collection}: ${e.message}`);
     }
     if (!Array.isArray(arr)) throw new Error(`${collection}: root must be a JSON array`);
-
-    const db = firebase.firestore();
-    await deleteCollectionDocs(db, collection);
-
-    const writes = [];
-    arr.forEach((item, idx) => {
-      const id =
-        item[idField] ||
-        item.slug ||
-        item.id ||
-        `item_${idx}_${Date.now()}`;
-      const cleanId = String(id).replace(/[^\w-]/g, '_').slice(0, 120);
-      const ref = db.collection(collection).doc(cleanId);
-      const copy = { ...item };
-      delete copy.id;
-      writes.push({ ref, data: copy });
-    });
-
-    for (let i = 0; i < writes.length; i += BATCH_MAX) {
-      const batch = db.batch();
-      writes.slice(i, i + BATCH_MAX).forEach(({ ref, data }) => batch.set(ref, data));
-      await batch.commit();
-    }
+    await window.CmsApi.replaceCollection(collection, arr, idField);
   }
 
   function text(node, selector) {
@@ -316,6 +288,11 @@
         title: text(card, 'h3'),
         body: text(card, 'p'),
       })),
+      projectsPage: {},
+      eventsPage: {},
+      timelinePage: {},
+      experiencePage: {},
+      achievementsPage: {},
     };
   }
 
@@ -369,12 +346,46 @@
     });
   }
 
+  function buildSimplePageConfig(doc, selectors) {
+    const out = {};
+    selectors.forEach(([key, selector]) => {
+      const value = text(doc, selector);
+      if (value) out[key] = value;
+    });
+    return out;
+  }
+
   async function loadStaticSiteIntoEditor() {
     const docs = await fetchStaticDocs();
     const timelineIndex = buildTimelineIndex(docs['timeline.html']);
     const config = buildIndexConfig(docs['index.html']);
     config.contactPage = buildContactConfig(docs['contact.html']);
     config.courseworkPage = buildCourseworkConfig(docs['coursework.html']);
+    config.projectsPage = buildSimplePageConfig(docs['projects.html'], [
+      ['heading', '.section.panel .page-title'],
+      ['intro', '.section.panel .subtle'],
+    ]);
+    config.eventsPage = buildSimplePageConfig(docs['events.html'], [
+      ['heading', '.section.panel .page-title'],
+      ['intro', '.section.panel .subtle'],
+      ['competitionsHeading', '#events-static-fallback > .section.panel:nth-of-type(2) .page-title'],
+      ['competitionsIntro', '#events-static-fallback > .section.panel:nth-of-type(2) .subtle'],
+    ]);
+    config.timelinePage = buildSimplePageConfig(docs['timeline.html'], [
+      ['heading', '.section.panel .page-title'],
+      ['intro', '.section.panel .subtle'],
+    ]);
+    config.experiencePage = buildSimplePageConfig(docs['experience.html'], [
+      ['heading', '.section.panel .page-title'],
+      ['intro', '.section.panel .subtle'],
+      ['professionalHeading', '#experience-static-fallback > section:nth-of-type(1) .page-title'],
+      ['campusHeading', '#experience-static-fallback > section:nth-of-type(2) .page-title'],
+    ]);
+    config.achievementsPage = buildSimplePageConfig(docs['achievements.html'], [
+      ['heading', '.section.panel .page-title'],
+      ['editableHeading', 'main > section.section.panel:nth-of-type(2) .page-title'],
+      ['editableIntro', 'main > section.section.panel:nth-of-type(2) .subtle'],
+    ]);
     config.achievementCards = buildAchievementCards(docs['achievements.html']);
 
     setTextarea('home-hero-json-field', config.homeHero);
@@ -384,6 +395,11 @@
     setTextarea('competencies-json-field', config.competencies);
     setTextarea('contact-page-json-field', config.contactPage);
     setTextarea('coursework-page-json-field', config.courseworkPage);
+    setTextarea('projects-page-json-field', config.projectsPage);
+    setTextarea('events-page-json-field', config.eventsPage);
+    setTextarea('timeline-page-json-field', config.timelinePage);
+    setTextarea('experience-page-json-field', config.experiencePage);
+    setTextarea('achievements-page-json-field', config.achievementsPage);
     setTextarea('achievement-cards-json-field', config.achievementCards);
     setTextarea('bulk-projects-json', buildProjectsSeed(docs['projects.html'], timelineIndex));
     setTextarea('bulk-events-json', buildEventsSeed(docs['events.html'], timelineIndex));
@@ -412,6 +428,11 @@
       ['competencies-json-field', 'competencies'],
       ['contact-page-json-field', 'contactPage'],
       ['coursework-page-json-field', 'courseworkPage'],
+      ['projects-page-json-field', 'projectsPage'],
+      ['events-page-json-field', 'eventsPage'],
+      ['timeline-page-json-field', 'timelinePage'],
+      ['experience-page-json-field', 'experiencePage'],
+      ['achievements-page-json-field', 'achievementsPage'],
       ['achievement-cards-json-field', 'achievementCards'],
     ].forEach(([id, key]) => {
       const value = document.getElementById(id)?.value?.trim();
@@ -434,7 +455,7 @@
   window.initAdminCmsExtensions = async function initAdminCmsExtensions() {
     if (!window.CmsApi?.firebaseConfigured?.()) return;
 
-    await fillFormFromFirestore();
+    await fillFormFromFirebase();
 
     const msg = document.getElementById('admin-message');
     const loadBtn = document.getElementById('load-static-cms-btn');
@@ -457,12 +478,12 @@
     if (publishAllBtn && !publishAllBtn.dataset.bound) {
       publishAllBtn.dataset.bound = '1';
       publishAllBtn.addEventListener('click', async () => {
-        msg.textContent = 'Publishing config and all collections to Firestore…';
+        msg.textContent = 'Publishing config and all collections to Realtime Database…';
         try {
           await publishAllFromEditor();
-          msg.textContent = 'Published config, projects, events, roles, and experience to Firestore.';
+          msg.textContent = 'Published config, projects, events, roles, and experience to Realtime Database.';
         } catch (e) {
-          msg.textContent = e.message || 'Full Firestore publish failed.';
+          msg.textContent = e.message || 'Full Realtime Database publish failed.';
         }
         setTimeout(() => (msg.textContent = ''), 5000);
       });
@@ -510,7 +531,7 @@
           document.getElementById('bulk-experience-json')?.value,
           'slug'
         );
-        msg.textContent = 'Published projects, events, roles, and experience to Firestore.';
+        msg.textContent = 'Published projects, events, roles, and experience to Realtime Database.';
         setTimeout(() => (msg.textContent = ''), 3500);
       } catch (e) {
         msg.textContent = e.message || 'Publish failed.';
@@ -521,8 +542,9 @@
     const help = document.getElementById('cms-json-help');
     if (help) {
       help.innerHTML = `
-        <p class="subtle"><strong>Projects:</strong> <code>category</code>: <code>hardware</code> | <code>software</code> | <code>hybrid</code>. <strong>Timeline links:</strong> optional <code>timelineLinkKind</code>: <code>project</code> | <code>event</code> | <code>experience</code> | <code>external</code> | <code>custom</code>; <code>timelineLinkSlug</code> (anchor id); or <code>timelineHref</code> / <code>timelineExternalUrl</code> for full URLs.</p>
-        <p class="subtle"><strong>Experience entries:</strong> <code>section</code>: <code>professional</code> or <code>campus</code>; <code>orderIndex</code> (higher = closer to top).</p>
+        <p class="subtle"><strong>Projects / events / experience:</strong> add <code>media</code>: <code>[{ type: "image"|"video"|"youtube"|"link", src, caption?, alt? }]</code> and optional <code>actions</code>: <code>[{ label, href, variant?, external? }]</code>.</p>
+        <p class="subtle"><strong>Timeline:</strong> entries auto-link by <code>slug</code>. Use <code>timelineSortMs</code> for exact ordering, or let the site infer order from <code>dateLine</code>. Optional <code>timelineLinkKind</code>: <code>project</code> | <code>event</code> | <code>experience</code> | <code>external</code> | <code>custom</code>.</p>
+        <p class="subtle"><strong>Experience entries:</strong> <code>section</code>: <code>professional</code> or <code>campus</code>; <code>orderIndex</code> (higher = closer to top). Experience rows now auto-feed the timeline when they have a date.</p>
         <p class="subtle"><strong>Events:</strong> <code>bucket</code>: <code>professional</code> | <code>competitions</code>.</p>
       `;
     }

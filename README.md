@@ -37,9 +37,11 @@ Your site URL format:
   - Local per-page views and last visit (browser-local)
   - Global counter via CountAPI (`https://api.countapi.xyz`)
 
-## Firestore CMS
+## Firebase CMS
 - Firebase project is configured as `website-9a938` in `.firebaserc`.
-- Open `admin.html`, click `Load Current Site Into CMS` to convert the current static pages into CMS JSON, then click `Publish All To Firestore`.
-- Or seed directly from the terminal with `python3 scripts/seed_firestore.py`.
-- Deploy rules with `firebase deploy --only firestore:rules,storage`.
+- The site now reads live content from Firebase Realtime Database, which works fine on GitHub Pages because the browser fetches data client-side.
+- Open `admin.html`, click `Load Current Site Into CMS` to convert the current static pages into CMS JSON, then click `Publish All To Realtime DB`.
+- Or seed directly from the terminal with `python3 scripts/seed_rtdb.py`.
+- Deploy RTDB rules with `firebase deploy --only database`.
+- Firestore rules remain in the repo if you want to keep the existing Firestore copy, but the live site no longer depends on Firestore.
 - Firebase Storage must be initialized in the Firebase console before resume uploads and `storage.rules` deployment will work.

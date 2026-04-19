@@ -1,9 +1,10 @@
 /**
- * Firestore + Auth helpers for GitHub Pages CMS.
- * Collections: config/site, site_projects, site_events, site_roles, site_experience
+ * Realtime Database + Auth helpers for GitHub Pages CMS.
+ * Paths: config/site, site_projects, site_events, site_roles, site_experience
  */
 (function () {
   const ADMIN_EMAIL = 'maghamohammadi@guilford.edu'.toLowerCase();
+  const CMS_PATHS = ['config/site', 'site_projects', 'site_events', 'site_roles', 'site_experience'];
 
   function normEmail(e) {
     return (e || '').trim().toLowerCase();
@@ -30,34 +31,67 @@
 
   function db() {
     initFirebase();
-    return firebase.firestore();
+    return firebase.database();
+  }
+
+  function rootRef(path) {
+    return db().ref(path);
+  }
+
+  function sortCmsItems(items) {
+    return [...items].sort((a, b) => {
+      const bo = Number(b.orderIndex);
+      const ao = Number(a.orderIndex);
+      if (Number.isFinite(bo) && Number.isFinite(ao) && bo !== ao) return bo - ao;
+      const bt = Number(b.timelineSortMs);
+      const at = Number(a.timelineSortMs);
+      if (Number.isFinite(bt) && Number.isFinite(at) && bt !== at) return bt - at;
+      return String(a.id || a.slug || '').localeCompare(String(b.id || b.slug || ''));
+    });
+  }
+
+  function mapNode(value) {
+    if (!value || typeof value !== 'object') return [];
+    return sortCmsItems(
+      Object.entries(value).map(([id, doc]) => ({
+        id,
+        ...(doc && typeof doc === 'object' ? doc : {}),
+      }))
+    );
+  }
+
+  function normalizeCmsData(raw) {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    return {
+      config: src.config && typeof src.config.site === 'object' ? src.config.site : {},
+      projects: mapNode(src.site_projects),
+      events: mapNode(src.site_events),
+      roles: mapNode(src.site_roles),
+      experience: mapNode(src.site_experience),
+    };
   }
 
   async function loadAllCmsData() {
     initFirebase();
     if (!firebase.apps.length) return null;
-    const d = db();
-    const [configSnap, projSnap, evSnap, roleSnap, expSnap] = await Promise.all([
-      d.collection('config').doc('site').get(),
-      d.collection('site_projects').get(),
-      d.collection('site_events').get(),
-      d.collection('site_roles').get(),
-      d.collection('site_experience').get(),
-    ]);
-
-    const config = configSnap.exists ? configSnap.data() : {};
-
-    function mapDocs(snap) {
-      return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    }
-
-    return {
-      config,
-      projects: mapDocs(projSnap),
-      events: mapDocs(evSnap),
-      roles: mapDocs(roleSnap),
-      experience: mapDocs(expSnap),
+    const values = await Promise.all(CMS_PATHS.map((path) => rootRef(path).once('value').then((snap) => snap.val())));
+    const raw = {
+      config: { site: values[0] },
+      site_projects: values[1],
+      site_events: values[2],
+      site_roles: values[3],
+      site_experience: values[4],
     };
+    return normalizeCmsData(raw);
+  }
+
+  function watchAllCmsData(callback) {
+    initFirebase();
+    if (!firebase.apps.length) return () => {};
+    const ref = db().ref();
+    const handler = (snap) => callback(normalizeCmsData(snap.val()));
+    ref.on('value', handler, (error) => console.warn('[CMS] RTDB watch failed', error));
+    return () => ref.off('value', handler);
   }
 
   function buildPortalPayload(cfg) {
@@ -77,6 +111,11 @@
       competencies: Array.isArray(cfg.competencies) ? cfg.competencies : undefined,
       contactPage: cfg.contactPage && typeof cfg.contactPage === 'object' ? cfg.contactPage : undefined,
       courseworkPage: cfg.courseworkPage && typeof cfg.courseworkPage === 'object' ? cfg.courseworkPage : undefined,
+      projectsPage: cfg.projectsPage && typeof cfg.projectsPage === 'object' ? cfg.projectsPage : undefined,
+      eventsPage: cfg.eventsPage && typeof cfg.eventsPage === 'object' ? cfg.eventsPage : undefined,
+      timelinePage: cfg.timelinePage && typeof cfg.timelinePage === 'object' ? cfg.timelinePage : undefined,
+      achievementsPage: cfg.achievementsPage && typeof cfg.achievementsPage === 'object' ? cfg.achievementsPage : undefined,
+      experiencePage: cfg.experiencePage && typeof cfg.experiencePage === 'object' ? cfg.experiencePage : undefined,
     };
   }
 
@@ -84,32 +123,42 @@
     initFirebase();
     const u = firebase.auth().currentUser;
     if (!u || normEmail(u.email) !== ADMIN_EMAIL) throw new Error('Not authorized');
-    await db()
-      .collection('config')
-      .doc('site')
-      .set(
-        {
-          ...payload,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+    await rootRef('config/site').update({
+      ...payload,
+      updatedAt: firebase.database.ServerValue.TIMESTAMP,
+    });
   }
 
   async function saveCollectionDoc(collectionName, docId, data, merge) {
     initFirebase();
     const u = firebase.auth().currentUser;
     if (!u || normEmail(u.email) !== ADMIN_EMAIL) throw new Error('Not authorized');
-    const ref = db().collection(collectionName).doc(docId);
-    if (merge) await ref.set({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-    else await ref.set({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    const ref = rootRef(`${collectionName}/${docId}`);
+    const payload = { ...data, updatedAt: firebase.database.ServerValue.TIMESTAMP };
+    if (merge) await ref.update(payload);
+    else await ref.set(payload);
   }
 
   async function deleteDoc(collectionName, docId) {
     initFirebase();
     const u = firebase.auth().currentUser;
     if (!u || normEmail(u.email) !== ADMIN_EMAIL) throw new Error('Not authorized');
-    await db().collection(collectionName).doc(docId).delete();
+    await rootRef(`${collectionName}/${docId}`).remove();
+  }
+
+  async function replaceCollection(collectionName, docs, idField) {
+    initFirebase();
+    const u = firebase.auth().currentUser;
+    if (!u || normEmail(u.email) !== ADMIN_EMAIL) throw new Error('Not authorized');
+    const payload = {};
+    (Array.isArray(docs) ? docs : []).forEach((item, idx) => {
+      const id = item?.[idField] || item?.slug || item?.id || `item_${idx}_${Date.now()}`;
+      const cleanId = String(id).replace(/[^\w-]/g, '_').slice(0, 120);
+      const copy = { ...(item || {}), updatedAt: firebase.database.ServerValue.TIMESTAMP };
+      delete copy.id;
+      payload[cleanId] = copy;
+    });
+    await rootRef(collectionName).set(payload);
   }
 
   function watchAuth(callback) {
@@ -152,10 +201,12 @@
     firebaseConfigured,
     initFirebase,
     loadAllCmsData,
+    watchAllCmsData,
     buildPortalPayload,
     saveConfigSite,
     saveCollectionDoc,
     deleteDoc,
+    replaceCollection,
     watchAuth,
     signInWithGoogle,
     signOutUser,
