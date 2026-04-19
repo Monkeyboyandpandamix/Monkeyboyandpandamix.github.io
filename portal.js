@@ -728,7 +728,32 @@ function initAdminPage() {
         if (homeSummaryHtml) payload.homeSummaryHtml = homeSummaryHtml;
         Object.assign(payload, collectCmsFirestoreExtras());
         await window.CmsApi.saveConfigSite(payload);
-        cloudNote = ' Synced to Firebase.';
+
+        // Also publish the collection-backed editors (projects, events, roles,
+        // experience) so admin edits in those tabs go live without a separate
+        // "Publish All" step.
+        const collections = [
+          ['bulk-projects-json', 'site_projects'],
+          ['bulk-events-json', 'site_events'],
+          ['bulk-roles-json', 'site_roles'],
+          ['bulk-experience-json', 'site_experience'],
+        ];
+        let publishedCount = 0;
+        for (const [fieldId, collection] of collections) {
+          const raw = document.getElementById(fieldId)?.value?.trim();
+          if (!raw) continue;
+          try {
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) continue;
+            await window.CmsApi.replaceCollection(collection, arr, 'slug');
+            publishedCount += 1;
+          } catch (e) {
+            console.warn('[Admin] Skipped publishing', collection, '— invalid JSON:', e.message);
+          }
+        }
+        cloudNote = publishedCount
+          ? ` Synced to Firebase (${publishedCount} collection${publishedCount === 1 ? '' : 's'} published).`
+          : ' Synced to Firebase.';
       } catch (err) {
         msg.textContent = err.message || 'Firebase save failed.';
         setTimeout(() => (msg.textContent = ''), 4000);

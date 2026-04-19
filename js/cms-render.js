@@ -51,6 +51,46 @@
     return (d.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
+  /**
+   * Lightweight HTML sanitizer used for any CMS-supplied HTML field that gets
+   * interpolated into innerHTML (project/event summaries, contact intro, notes,
+   * featured-article bodies, etc.). It removes <script>/<style>/<iframe> nodes,
+   * inline event handlers (onclick=...), and javascript:/data: URLs. Not a
+   * full sanitizer — admin write rules are the primary defense — but blocks
+   * the obvious stored-XSS shapes.
+   */
+  function sanitizeHtml(html) {
+    if (html == null) return '';
+    const str = String(html);
+    if (!str.trim()) return '';
+    const tmpl = document.createElement('template');
+    tmpl.innerHTML = str;
+    const walker = document.createTreeWalker(tmpl.content, NodeFilter.SHOW_ELEMENT, null);
+    const drop = [];
+    let node = walker.nextNode();
+    while (node) {
+      const tag = node.tagName.toLowerCase();
+      if (tag === 'script' || tag === 'style' || tag === 'iframe' || tag === 'object' || tag === 'embed') {
+        drop.push(node);
+      } else {
+        for (const attr of Array.from(node.attributes)) {
+          const name = attr.name.toLowerCase();
+          const value = String(attr.value || '').trim();
+          if (name.startsWith('on')) {
+            node.removeAttribute(attr.name);
+            continue;
+          }
+          if ((name === 'href' || name === 'src' || name === 'xlink:href') && /^\s*(javascript|data|vbscript):/i.test(value)) {
+            node.removeAttribute(attr.name);
+          }
+        }
+      }
+      node = walker.nextNode();
+    }
+    drop.forEach((n) => n.parentNode && n.parentNode.removeChild(n));
+    return tmpl.innerHTML;
+  }
+
   function parseSortMs(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
@@ -216,9 +256,9 @@
     const meta = p.meta ? `<p class="meta">${escapeHtml(p.meta)}</p>` : '';
     const dateLine = p.dateLine ? `<p class="date">${escapeHtml(p.dateLine)}</p>` : '';
     const purpose = p.summaryHtml
-      ? `<div class="cms-project-summary">${p.summaryHtml}</div>`
+      ? `<div class="cms-project-summary">${sanitizeHtml(p.summaryHtml)}</div>`
       : '';
-    const detail = p.detailHtml ? `<details><summary>Expand details</summary>${p.detailHtml}</details>` : '';
+    const detail = p.detailHtml ? `<details><summary>Expand details</summary>${sanitizeHtml(p.detailHtml)}</details>` : '';
     const chipsArr = Array.isArray(p.chips) ? p.chips : [];
     const chips = chipsArr
       .map((t) => {
@@ -240,8 +280,8 @@
     const title = escapeHtml(e.title || 'Untitled');
     const meta = e.meta ? `<p class="meta">${escapeHtml(e.meta)}</p>` : '';
     const dateLine = e.dateLine ? `<p class="date">${escapeHtml(e.dateLine)}</p>` : '';
-    const body = e.summaryHtml ? `<div class="cms-event-body">${e.summaryHtml}</div>` : '';
-    const detail = e.detailHtml ? `<details><summary>Expand details</summary>${e.detailHtml}</details>` : '';
+    const body = e.summaryHtml ? `<div class="cms-event-body">${sanitizeHtml(e.summaryHtml)}</div>` : '';
+    const detail = e.detailHtml ? `<details><summary>Expand details</summary>${sanitizeHtml(e.detailHtml)}</details>` : '';
     const chipsArr = Array.isArray(e.chips) ? e.chips : [];
     const chips = chipsArr.map((t) => `<span>${escapeHtml(t)}</span>`).join('');
     const media = renderMediaGallery(e.media);
@@ -262,8 +302,8 @@
       .map((c) => `<span>${escapeHtml(c)}</span>`)
       .join('');
     const chipsHtml = chips ? `<div class="chips">${chips}</div>` : '';
-    const summary = ex.summaryHtml ? `<div class="cms-experience-summary">${ex.summaryHtml}</div>` : '';
-    const detail = ex.detailHtml ? `<details><summary>Expand details</summary>${ex.detailHtml}</details>` : '';
+    const summary = ex.summaryHtml ? `<div class="cms-experience-summary">${sanitizeHtml(ex.summaryHtml)}</div>` : '';
+    const detail = ex.detailHtml ? `<details><summary>Expand details</summary>${sanitizeHtml(ex.detailHtml)}</details>` : '';
     const media = renderMediaGallery(ex.media);
     const actions = renderActions(ex.actions, 'Open');
     return `<article id="${slug}" class="card"><h3>${title}</h3>${meta}${dateLine}${summary}${ul}${detail}${media}${actions}${chipsHtml}</article>`;
@@ -578,7 +618,7 @@
           // Hide institution note if it duplicates the panel-level note.
           const hideNote = noteHtmlRaw && hasGlobalNote && norm(stripHtml(noteHtmlRaw)) === norm(stripHtml(cp.noteHtml));
           const noteSection = noteHtmlRaw && !hideNote
-            ? `<section class="section panel reveal">${noteHtmlRaw}</section>`
+            ? `<section class="section panel reveal">${sanitizeHtml(noteHtmlRaw)}</section>`
             : '';
           return `${headerHtml}<section class="section grid-2 reveal">${grid}</section>${noteSection}`;
         })
@@ -587,7 +627,7 @@
       body = `<section class="section grid-2 reveal">${renderCourseCategoryCards(categories)}</section>`;
     }
 
-    const globalNote = hasGlobalNote ? `<section class="section panel reveal">${cp.noteHtml}</section>` : '';
+    const globalNote = hasGlobalNote ? `<section class="section panel reveal">${sanitizeHtml(cp.noteHtml)}</section>` : '';
 
     safeSwap(fb, mount, `${header}${body}${globalNote}`);
   }
@@ -624,7 +664,7 @@
       .map((a) => {
         const title = escapeHtml(a.title || a.headline || 'Featured Article');
         const date = a.date ? `<p class="date">${escapeHtml(a.date)}</p>` : '';
-        const summary = a.summaryHtml || (a.summary ? `<p>${escapeHtml(a.summary)}</p>` : '');
+        const summary = a.summaryHtml ? sanitizeHtml(a.summaryHtml) : (a.summary ? `<p>${escapeHtml(a.summary)}</p>` : '');
         const url = (a.url || a.href || '').trim();
         const linkLabel = escapeHtml(a.linkLabel || 'Read Full Article');
         const link = url ? `<p><a class="btn ghost" href="${escapeAttr(url)}" target="_blank" rel="noopener">${linkLabel}</a></p>` : '';
@@ -647,7 +687,7 @@
     const hasIntro = !!((cp.introHtml && cp.introHtml.trim()) || (cp.intro && String(cp.intro).trim()));
     if (!hasIntro && !actionsList.length && !cardsList.length) return;
     const heading = escapeHtml(cp.heading || 'Interested in collaborating?');
-    const intro = cp.introHtml ? `<div class="cms-contact-intro">${cp.introHtml}</div>` : `<p>${escapeHtml(cp.intro || '')}</p>`;
+    const intro = cp.introHtml ? `<div class="cms-contact-intro">${sanitizeHtml(cp.introHtml)}</div>` : `<p>${escapeHtml(cp.intro || '')}</p>`;
     const actions = actionsList
       .map((a) => {
         const cls = a.variant === 'primary' ? 'btn primary' : 'btn ghost';
@@ -658,7 +698,7 @@
     const cards = cardsList
       .map(
         (c) =>
-          `<article class="card"><h3>${escapeHtml(c.title || '')}</h3><div class="cms-card-body">${c.bodyHtml || `<p>${escapeHtml(c.body || '')}</p>`}</div></article>`
+          `<article class="card"><h3>${escapeHtml(c.title || '')}</h3><div class="cms-card-body">${c.bodyHtml ? sanitizeHtml(c.bodyHtml) : `<p>${escapeHtml(c.body || '')}</p>`}</div></article>`
       )
       .join('');
     const actionsHtml = actions ? `<div class="actions">${actions}</div>` : '';
@@ -675,7 +715,7 @@
     if (cards.length < staticCount) return;
     mount.innerHTML = cards
       .map((c) => {
-        const body = c.bodyHtml || `<p>${escapeHtml(c.body || c.description || '')}</p>`;
+        const body = c.bodyHtml ? sanitizeHtml(c.bodyHtml) : `<p>${escapeHtml(c.body || c.description || '')}</p>`;
         return `<article class="card"><h3>${escapeHtml(c.title || '')}</h3>${c.meta ? `<p class="meta">${escapeHtml(c.meta)}</p>` : ''}${body}</article>`;
       })
       .join('');
