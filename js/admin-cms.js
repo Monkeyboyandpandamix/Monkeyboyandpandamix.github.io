@@ -288,6 +288,7 @@
     setTextarea('experience-page-json-field', c.experiencePage);
     setTextarea('achievements-page-json-field', c.achievementsPage);
     setTextarea('achievement-cards-json-field', c.achievementCards);
+    setTextarea('featured-articles-json-field', c.featuredArticles);
 
     setTextarea('bulk-projects-json', data.projects);
     setTextarea('bulk-events-json', data.events);
@@ -809,6 +810,7 @@
       ['experience-page-json-field', 'experiencePage'],
       ['achievements-page-json-field', 'achievementsPage'],
       ['achievement-cards-json-field', 'achievementCards'],
+      ['featured-articles-json-field', 'featuredArticles'],
     ].forEach(([id, key]) => {
       const value = document.getElementById(id)?.value?.trim();
       if (!value) return;

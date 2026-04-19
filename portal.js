@@ -631,6 +631,7 @@ function collectCmsFirestoreExtras() {
     ['experience-page-json-field', 'experiencePage'],
     ['achievements-page-json-field', 'achievementsPage'],
     ['achievement-cards-json-field', 'achievementCards'],
+    ['featured-articles-json-field', 'featuredArticles'],
   ];
   fields.forEach(([id, key]) => {
     const el = document.getElementById(id);

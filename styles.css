@@ -1772,3 +1772,127 @@ html.a11y-color-soft .noise {
     bottom: max(4.5rem, env(safe-area-inset-bottom));
   }
 }
+
+/* ============================================================
+   Responsive + Accessibility Enhancements
+   - Better tap targets, fluid typography, and color/motion a11y
+   ============================================================ */
+
+/* Phones: tighten spacing, single-column nav, larger tap targets */
+@media (max-width: 640px) {
+  :root { font-size: 15px; }
+  .container { padding-left: 0.9rem; padding-right: 0.9rem; }
+  .site-header-inner nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    width: 100%;
+  }
+  .site-header-inner nav a {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 0.55rem 0.75rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn,
+  .btn.primary,
+  .btn.ghost {
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    font-size: 0.95rem;
+  }
+  .actions { flex-wrap: wrap; gap: 0.5rem; }
+  .actions .btn { flex: 1 1 auto; }
+  h1, .page-title { font-size: clamp(1.45rem, 6vw, 2rem); line-height: 1.2; }
+  h2 { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+  h3 { font-size: 1.1rem; }
+  .lead, .subtle, p { font-size: 0.97rem; line-height: 1.55; }
+  .hero { padding: 1.1rem; }
+  .media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; }
+  .chips { flex-wrap: wrap; gap: 0.3rem; }
+  .chips span { font-size: 0.78rem; padding: 0.25rem 0.55rem; }
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .site-header-inner nav a { font-size: 0.85rem; padding: 0.5rem 0.55rem; }
+  .brand { font-size: 1.1rem; }
+}
+
+/* Tablet refinements */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container { padding-left: 1.1rem; padding-right: 1.1rem; }
+  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .media-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .btn { min-height: 42px; }
+}
+
+/* Reduce motion for users who request it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}
+
+/* High-contrast / forced-colors mode (Windows High Contrast etc) */
+@media (prefers-contrast: more), (forced-colors: active) {
+  :root {
+    --text: #ffffff;
+    --muted: #e8e8e8;
+    --border: #ffffff;
+    --accent: #ffd24a;
+    --accent-2: #ffd24a;
+  }
+  .btn, .card, .panel, .chips span {
+    border-width: 2px !important;
+  }
+  a { text-decoration: underline; }
+}
+
+/* Stronger keyboard focus indicator everywhere */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #ffd24a;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Skip link helper (works if added to pages) */
+.skip-link {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  z-index: 9999;
+  background: #ffd24a;
+  color: #111;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+}
+
+/* Make sure long URLs in articles wrap on phones */
+.card a, .card p { word-break: break-word; overflow-wrap: anywhere; }
+
+/* Ensure form controls inherit readable color on small screens */
+input, select, textarea, button { font: inherit; }

@@ -348,15 +348,32 @@
     el.classList.remove('section-expandable', 'card-expandable', 'is-open');
   }
 
+  /** Wrap the last 2 words of a plain name in an accent span (matches the original "Mohammad **Agha Mohammadi**" highlight). */
+  function highlightNameLastWords(plain) {
+    const words = String(plain || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '';
+    if (words.length === 1) return `<span class="accent-block">${escapeHtml(words[0])}</span>`;
+    if (words.length === 2) return `<span class="accent-block">${escapeHtml(words[0])} ${escapeHtml(words[1])}</span>`;
+    const head = words.slice(0, words.length - 2).map(escapeHtml).join(' ');
+    const tail = words.slice(-2).map(escapeHtml).join(' ');
+    return `${head} <span class="accent-block">${tail}</span>`;
+  }
+
   function applyHomeHero(cfg) {
     const mount = document.getElementById('home-hero-dynamic');
     const fb = document.getElementById('home-hero-static');
     if (!mount || !fb || !cfg) return;
+    // If the CMS has nothing meaningful, leave the static hero alone.
+    const hasAnything = !!(cfg.eyebrow || cfg.title || (cfg.titleHtml && stripHtml(cfg.titleHtml).trim()) || cfg.lead || cfg.actionsHtml);
+    if (!hasAnything) return;
     const eyebrow = cfg.eyebrow ? `<p class="eyebrow">${escapeHtml(cfg.eyebrow)}</p>` : '';
     const rawTitleHtml = typeof cfg.titleHtml === 'string' ? cfg.titleHtml.trim() : '';
-    const titleHtml = rawTitleHtml
-      ? (/<h1[\s>]/i.test(rawTitleHtml) ? rawTitleHtml : `<h1>${escapeHtml(stripHtml(rawTitleHtml) || rawTitleHtml)}</h1>`)
-      : `<h1>${escapeHtml(cfg.title || '')}</h1>`;
+    // Use plain text from titleHtml/title, then auto-highlight last words so the static "accent-block" effect survives a CMS save.
+    const plainTitle = stripHtml(rawTitleHtml).trim() || String(cfg.title || '').trim();
+    // If the CMS string already contains an accent span, trust it; otherwise rebuild the highlight.
+    const containsAccent = /class\s*=\s*["'][^"']*accent-block/i.test(rawTitleHtml);
+    const innerTitle = containsAccent ? rawTitleHtml.replace(/^\s*<h1[^>]*>|<\/h1>\s*$/gi, '') : highlightNameLastWords(plainTitle);
+    const titleHtml = `<h1>${innerTitle}</h1>`;
     const lead = cfg.lead ? `<p class="lead">${escapeHtml(cfg.lead)}</p>` : '';
     const actions =
       cfg.actionsHtml ||
@@ -508,19 +525,33 @@
     const sub = cp.panelSubtitle ? `<p class="subtle">${escapeHtml(cp.panelSubtitle)}</p>` : '';
     const header = `<section class="section panel reveal"><h1 class="page-title">${title}</h1>${sub}</section>`;
 
+    const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const panelSubNorm = norm(cp.panelSubtitle);
+    const panelTitleNorm = norm(cp.panelTitle);
+
     let body = '';
     if (useInstitutions) {
+      const single = institutions.length === 1;
       body = institutions
         .map((inst) => {
-          const h = escapeHtml((inst.name || inst.school || 'Education').trim() || 'Education');
-          const subLine = inst.subtitle || inst.panelSubtitle;
-          const instSub = subLine ? `<p class="subtle">${escapeHtml(String(subLine))}</p>` : '';
+          const rawName = (inst.name || inst.school || 'Education').trim() || 'Education';
+          const subLine = inst.subtitle || inst.panelSubtitle || '';
           const grid = renderCourseCategoryCards(inst.categories);
-          const note =
-            typeof inst.noteHtml === 'string' && inst.noteHtml.trim()
-              ? `<section class="section panel reveal">${inst.noteHtml}</section>`
-              : '';
-          return `<section class="section panel reveal coursework-school"><h2 class="page-title">${h}</h2>${instSub}</section><section class="section grid-2 reveal">${grid}</section>${note}`;
+          const noteHtmlRaw = typeof inst.noteHtml === 'string' ? inst.noteHtml.trim() : '';
+          // Hide the institution name when there's only one school AND its name duplicates the panel title
+          // (or is the generic placeholder "Education"). With multiple schools we always show the name.
+          const hideName = single && (norm(rawName) === panelTitleNorm || norm(rawName) === 'education');
+          // Hide the institution subtitle when it duplicates the panel-level subtitle.
+          const hideSub = !!subLine && norm(subLine) === panelSubNorm;
+          const headerHtml = hideName && hideSub
+            ? ''
+            : `<section class="section panel reveal coursework-school">${hideName ? '' : `<h2 class="page-title">${escapeHtml(rawName)}</h2>`}${hideSub || !subLine ? '' : `<p class="subtle">${escapeHtml(String(subLine))}</p>`}</section>`;
+          // Hide institution note if it duplicates the panel-level note.
+          const hideNote = noteHtmlRaw && hasGlobalNote && norm(stripHtml(noteHtmlRaw)) === norm(stripHtml(cp.noteHtml));
+          const noteSection = noteHtmlRaw && !hideNote
+            ? `<section class="section panel reveal">${noteHtmlRaw}</section>`
+            : '';
+          return `${headerHtml}<section class="section grid-2 reveal">${grid}</section>${noteSection}`;
         })
         .join('');
     } else if (hasLegacyGrid) {
@@ -532,6 +563,29 @@
     mount.innerHTML = `${header}${body}${globalNote}`;
     mount.hidden = false;
     fb.hidden = true;
+  }
+
+  /** Featured Articles (news/press) — rendered on achievements.html. */
+  function applyFeaturedArticles(items) {
+    const mount = document.getElementById('featured-articles-dynamic');
+    const fb = document.getElementById('featured-articles-static');
+    if (!mount || !Array.isArray(items) || !items.length) return;
+    const html = items
+      .map((a) => {
+        const title = escapeHtml(a.title || a.headline || 'Featured Article');
+        const date = a.date ? `<p class="date">${escapeHtml(a.date)}</p>` : '';
+        const summary = a.summaryHtml || (a.summary ? `<p>${escapeHtml(a.summary)}</p>` : '');
+        const url = (a.url || a.href || '').trim();
+        const linkLabel = escapeHtml(a.linkLabel || 'Read Full Article');
+        const link = url ? `<p><a class="btn ghost" href="${escapeAttr(url)}" target="_blank" rel="noopener">${linkLabel}</a></p>` : '';
+        const fallbackUrl = url ? `<p class="subtle">If the button fails, open: <br/>${escapeHtml(url)}</p>` : '';
+        const tag = a.chip || a.tag ? `<div class="chips"><span>${escapeHtml(a.chip || a.tag)}</span></div>` : '';
+        return `<article class="card">${title ? `<h3>${title}</h3>` : ''}${date}${summary}${link}${fallbackUrl}${tag}</article>`;
+      })
+      .join('');
+    mount.innerHTML = `<section class="section stack reveal">${html}</section>`;
+    mount.hidden = false;
+    if (fb) fb.hidden = true;
   }
 
   function applyContactPage(cp) {
@@ -637,6 +691,10 @@
 
     if (path === 'achievements.html' && payload && payload.achievementCards && payload.achievementCards.length) {
       applyAchievementGrid(payload.achievementCards);
+    }
+
+    if (path === 'achievements.html' && Array.isArray(cfg.featuredArticles) && cfg.featuredArticles.length) {
+      applyFeaturedArticles(cfg.featuredArticles);
     }
 
     if (path === 'projects.html') applyPanelCopy(document.querySelector('main .section.panel'), cfg.projectsPage);
