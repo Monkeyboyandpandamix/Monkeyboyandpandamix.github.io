@@ -242,6 +242,13 @@
       .replace(/>/g, '&gt;');
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   async function fillFormFromFirebase() {
     ts('info', 'admin-cms', 'fillFormFromFirebase: calling CmsApi.loadAllCmsData()');
     let data;
@@ -1377,7 +1384,10 @@
   function syncFriendlyTextFields() {
     setTextarea('home-hero-json-field', {
       eyebrow: document.getElementById('friendly-home-eyebrow')?.value?.trim() || '',
-      titleHtml: document.getElementById('friendly-home-title')?.value?.trim() || '',
+      titleHtml: (() => {
+        const value = document.getElementById('friendly-home-title')?.value?.trim() || '';
+        return value ? `<h1>${escapeHtml(value)}</h1>` : '';
+      })(),
       lead: document.getElementById('friendly-home-lead')?.value?.trim() || '',
     });
     setTextarea('projects-page-json-field', {
@@ -1687,6 +1697,64 @@
     const openLinksBtn = document.getElementById('open-links-tab-btn');
     const openMediaBtn = document.getElementById('open-media-tab-btn');
 
+    const addTemplates = {
+      'friendly-add-project': [getFriendlyProjects, setFriendlyProjects, { title: '', slug: '', dateLine: '', category: 'software', summaryText: '', detailText: '', chips: '', media: '' }],
+      'friendly-add-event': [getFriendlyEvents, setFriendlyEvents, { title: '', slug: '', dateLine: '', bucket: 'professional', summaryText: '', detailText: '', chips: '', media: '' }],
+      'friendly-add-experience': [getFriendlyExperience, setFriendlyExperience, { title: '', slug: '', dateLine: '', section: 'professional', meta: '', bullets: [], chips: '' }],
+      'friendly-add-role': [getFriendlyRoles, setFriendlyRoles, { title: '', slug: '', timelineDateLabel: '', summaryText: '' }],
+      'friendly-add-highlight': [getFriendlyQuickHighlights, setFriendlyQuickHighlights, { title: '', bodyText: '' }],
+      'friendly-add-competency': [getFriendlyCompetencies, setFriendlyCompetencies, { kicker: '', subtle: '' }],
+      'friendly-add-cert-completed': [getFriendlyCompletedCerts, setFriendlyCompletedCerts, { text: '', date: '', note: '' }],
+      'friendly-add-cert-progress': [getFriendlyProgressCerts, setFriendlyProgressCerts, { text: '', date: '', note: '' }],
+      'friendly-add-school': [getFriendlySchools, setFriendlySchools, { name: '', subtitle: '', categories: '', noteText: '' }],
+      'friendly-add-achievement-card': [getFriendlyAchievementCards, setFriendlyAchievementCards, { title: '', meta: '', bodyText: '' }],
+      'friendly-add-contact-action': [getFriendlyContactActions, setFriendlyContactActions, { label: '', href: '', variant: 'ghost', external: false }],
+      'friendly-add-contact-card': [getFriendlyContactCards, setFriendlyContactCards, { title: '', bodyText: '' }],
+    };
+
+    if (!document.body.dataset.adminCmsDelegateBound) {
+      document.body.dataset.adminCmsDelegateBound = '1';
+      document.addEventListener(
+        'click',
+        (event) => {
+          const target = event.target.closest('button, [data-admin-tab]');
+          if (!target) return;
+
+          const tabName = target.getAttribute('data-admin-tab');
+          if (tabName) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            openAdminTab(tabName);
+            ts('debug', 'admin-cms', 'Delegated tab open', { tab: tabName });
+            return;
+          }
+
+          if (target.id === 'open-links-tab-btn' || target.id === 'open-media-tab-btn') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            openAdminTab('media');
+            ts('debug', 'admin-cms', 'Delegated media tab shortcut', { source: target.id });
+            return;
+          }
+
+          const action = addTemplates[target.id];
+          if (!action) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          const [getter, setter, template] = action;
+          const list = getter();
+          list.push(template);
+          setter(list);
+          renderFriendlyEditors();
+          ts('info', 'admin-cms', 'Delegated add action', {
+            button: target.id,
+            countAfter: Array.isArray(getter()) ? getter().length : '(n/a)',
+          });
+        },
+        true
+      );
+    }
+
     if (openLinksBtn && !openLinksBtn.dataset.bound) {
       openLinksBtn.dataset.bound = '1';
       openLinksBtn.addEventListener('click', () => openAdminTab('media'));
@@ -1696,20 +1764,7 @@
       openMediaBtn.addEventListener('click', () => openAdminTab('media'));
     }
 
-    [
-      ['friendly-add-project', getFriendlyProjects, setFriendlyProjects, { title: '', slug: '', dateLine: '', category: 'software', summaryText: '', detailText: '', chips: '', media: '' }],
-      ['friendly-add-event', getFriendlyEvents, setFriendlyEvents, { title: '', slug: '', dateLine: '', bucket: 'professional', summaryText: '', detailText: '', chips: '', media: '' }],
-      ['friendly-add-experience', getFriendlyExperience, setFriendlyExperience, { title: '', slug: '', dateLine: '', section: 'professional', meta: '', bullets: [], chips: '' }],
-      ['friendly-add-role', getFriendlyRoles, setFriendlyRoles, { title: '', slug: '', timelineDateLabel: '', summaryText: '' }],
-      ['friendly-add-highlight', getFriendlyQuickHighlights, setFriendlyQuickHighlights, { title: '', bodyText: '' }],
-      ['friendly-add-competency', getFriendlyCompetencies, setFriendlyCompetencies, { kicker: '', subtle: '' }],
-      ['friendly-add-cert-completed', getFriendlyCompletedCerts, setFriendlyCompletedCerts, { text: '', date: '', note: '' }],
-      ['friendly-add-cert-progress', getFriendlyProgressCerts, setFriendlyProgressCerts, { text: '', date: '', note: '' }],
-      ['friendly-add-school', getFriendlySchools, setFriendlySchools, { name: '', subtitle: '', categories: '', noteText: '' }],
-      ['friendly-add-achievement-card', getFriendlyAchievementCards, setFriendlyAchievementCards, { title: '', meta: '', bodyText: '' }],
-      ['friendly-add-contact-action', getFriendlyContactActions, setFriendlyContactActions, { label: '', href: '', variant: 'ghost', external: false }],
-      ['friendly-add-contact-card', getFriendlyContactCards, setFriendlyContactCards, { title: '', bodyText: '' }],
-    ].forEach(([id, getter, setter, template]) => {
+    Object.entries(addTemplates).forEach(([id, [getter, setter, template]]) => {
       const btn = document.getElementById(id);
       if (!btn || btn.dataset.bound) return;
       btn.dataset.bound = '1';

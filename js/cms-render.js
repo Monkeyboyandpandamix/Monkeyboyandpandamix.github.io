@@ -345,7 +345,10 @@
     const fb = document.getElementById('home-hero-static');
     if (!mount || !fb || !cfg) return;
     const eyebrow = cfg.eyebrow ? `<p class="eyebrow">${escapeHtml(cfg.eyebrow)}</p>` : '';
-    const titleHtml = cfg.titleHtml || `<h1>${escapeHtml(cfg.title || '')}</h1>`;
+    const rawTitleHtml = typeof cfg.titleHtml === 'string' ? cfg.titleHtml.trim() : '';
+    const titleHtml = rawTitleHtml
+      ? (/<h1[\s>]/i.test(rawTitleHtml) ? rawTitleHtml : `<h1>${escapeHtml(stripHtml(rawTitleHtml) || rawTitleHtml)}</h1>`)
+      : `<h1>${escapeHtml(cfg.title || '')}</h1>`;
     const lead = cfg.lead ? `<p class="lead">${escapeHtml(cfg.lead)}</p>` : '';
     const actions =
       cfg.actionsHtml ||
@@ -491,7 +494,7 @@
     const useInstitutions = institutions.length > 0;
     const hasLegacyGrid = categories.length > 0;
 
-    if (!useInstitutions && !hasLegacyGrid && !hasGlobalNote) return;
+    if (!useInstitutions && !hasLegacyGrid) return;
 
     const title = escapeHtml(cp.panelTitle || 'Academic Coursework');
     const sub = cp.panelSubtitle ? `<p class="subtle">${escapeHtml(cp.panelSubtitle)}</p>` : '';
@@ -527,22 +530,28 @@
     const mount = document.getElementById('contact-dynamic-mount');
     const fb = document.getElementById('contact-static-fallback');
     if (!mount || !fb || !cp || typeof cp !== 'object') return;
+    const actionsList = Array.isArray(cp.actions) ? cp.actions : [];
+    const cardsList = Array.isArray(cp.cards) ? cp.cards : [];
+    const hasIntro = !!((cp.introHtml && cp.introHtml.trim()) || (cp.intro && String(cp.intro).trim()));
+    if (!hasIntro && !actionsList.length && !cardsList.length) return;
     const heading = escapeHtml(cp.heading || 'Interested in collaborating?');
     const intro = cp.introHtml ? `<div class="cms-contact-intro">${cp.introHtml}</div>` : `<p>${escapeHtml(cp.intro || '')}</p>`;
-    const actions = (Array.isArray(cp.actions) ? cp.actions : [])
+    const actions = actionsList
       .map((a) => {
         const cls = a.variant === 'primary' ? 'btn primary' : 'btn ghost';
         const ext = a.external ? ' target="_blank" rel="noopener"' : '';
         return `<a class="${cls}" href="${escapeAttr(a.href || '#')}"${ext}>${escapeHtml(a.label || '')}</a>`;
       })
       .join('');
-    const cards = (Array.isArray(cp.cards) ? cp.cards : [])
+    const cards = cardsList
       .map(
         (c) =>
           `<article class="card"><h3>${escapeHtml(c.title || '')}</h3><div class="cms-card-body">${c.bodyHtml || `<p>${escapeHtml(c.body || '')}</p>`}</div></article>`
       )
       .join('');
-    mount.innerHTML = `<section class="section panel reveal"><h1 class="page-title">${heading}</h1>${intro}<div class="actions">${actions}</div></section><section class="section grid-2 reveal">${cards}</section>`;
+    const actionsHtml = actions ? `<div class="actions">${actions}</div>` : '';
+    const cardsHtml = cards ? `<section class="section grid-2 reveal">${cards}</section>` : '';
+    mount.innerHTML = `<section class="section panel reveal"><h1 class="page-title">${heading}</h1>${intro}${actionsHtml}</section>${cardsHtml}`;
     mount.hidden = false;
     fb.hidden = true;
   }
