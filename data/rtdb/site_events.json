@@ -1,0 +1,112 @@
+{
+  "event-charlotte-issa-microsoft": {
+    "bucket": "professional",
+    "chips": [
+      "Microsoft Entra",
+      "CTEM",
+      "AI Security",
+      "Networking"
+    ],
+    "dateLine": "February 2026 - Charlotte, NC",
+    "detailHtml": "<p>Valuable opportunity to connect with industry professionals and gain insights into real-world cybersecurity implementations and best practices.</p>",
+    "meta": "",
+    "orderIndex": 999,
+    "slug": "event-charlotte-issa-microsoft",
+    "summaryHtml": "<p>Professional networking event on Entra conditional access, CTEM, and secure AI adoption.</p>",
+    "timelineDateLabel": "February 2026",
+    "timelineEnabled": true,
+    "timelineSortMs": 1769922000000,
+    "title": "Charlotte ISSA Monthly Meeting at Microsoft"
+  },
+  "event-dod-cyber-sentinel-2025": {
+    "bucket": "competitions",
+    "chips": [
+      "DoD",
+      "Correlation One",
+      "Cyber Sentinel",
+      "OSINT",
+      "Cryptography"
+    ],
+    "dateLine": "June 2025",
+    "detailHtml": "<p>Challenge categories included Open-Source Intelligence (OSINT), accessing secure websites, cryptography, and additional technical cyber tasks.</p><p>Strong learning experience with practical problem-solving, time-based competition, and real-world defensive/offensive thinking.</p>",
+    "meta": "Hosted by Correlation One on behalf of the U.S. Department of Defense",
+    "orderIndex": 899,
+    "slug": "event-dod-cyber-sentinel-2025",
+    "summaryHtml": "<p>Competed in Correlation One's DoD Cyber Sentinel across OSINT, secure web access, cryptography, and broader cyber challenge categories.</p>",
+    "timelineDateLabel": "June 2025",
+    "timelineEnabled": true,
+    "timelineSortMs": 1748750400000,
+    "title": "DoD Cyber Sentinel Challenge"
+  },
+  "event-featured-guilford-article": {
+    "bucket": "professional",
+    "chips": [
+      "Featured Student Success"
+    ],
+    "dateLine": "November 2025",
+    "detailHtml": "<p>\n          <a class=\"btn ghost\" href=\"https://www.guilford.edu/news/2025/11/guilford-opened-mo-mohammadi-world-hed-never-thought-about\" target=\"_blank\" rel=\"noopener\">Read Full Article</a>\n        </p>",
+    "meta": "",
+    "orderIndex": 1000,
+    "slug": "event-featured-guilford-article",
+    "summaryHtml": "<p>Featured by Guilford College for academic and technical journey milestones.</p>",
+    "timelineDateLabel": "November 2025",
+    "timelineEnabled": true,
+    "timelineSortMs": 1761969600000,
+    "title": "Featured: Guilford College News Article"
+  },
+  "event-nc-guard-ctf-2025": {
+    "bucket": "competitions",
+    "chips": [
+      "North Carolina National Guard",
+      "CTF",
+      "Digital Forensics",
+      "Web Exploitation",
+      "Secure Coding"
+    ],
+    "dateLine": "November 1, 2025",
+    "detailHtml": "<p>Participated in a regional CTF focused on practical cybersecurity challenges and team-based problem solving with students across multiple skill levels.</p><p>Challenge domains included digital forensics, web exploitation, secure coding, AI-related security tasks, and hands-on investigative workflows under time constraints.</p><p>The event emphasized collaboration, competitive problem-solving, and professional networking with pentesters, incident responders, and digital forensics analysts from North Carolina organizations.</p>",
+    "meta": "Hosted by the North Carolina National Guard Cyber Security Response Force",
+    "orderIndex": 900,
+    "slug": "event-nc-guard-ctf-2025",
+    "summaryHtml": "<p>Capture the Flag competition focused on forensics, web exploitation, secure coding, and teamwork.</p>",
+    "timelineDateLabel": "November 1, 2025",
+    "timelineEnabled": true,
+    "timelineSortMs": 1761969600000,
+    "title": "Capture the Flag - UNC Charlotte"
+  },
+  "event-retr3at-2025": {
+    "bucket": "professional",
+    "chips": [
+      "Deepfakes",
+      "Cyber Intelligence",
+      "National Security",
+      "PHISH Club"
+    ],
+    "dateLine": "February 2025 - Montreat College",
+    "detailHtml": "<p><strong>Featured Speakers:</strong> Jeff Crume, Lauren Goldman, Madeline Sides</p><p>Discovered PHISH Club, an organization focused on phishing awareness and defense.</p>",
+    "meta": "",
+    "orderIndex": 998,
+    "slug": "event-retr3at-2025",
+    "summaryHtml": "<p>Cybersecurity conference participation covering deepfakes, cyber intelligence, and national security.</p>",
+    "timelineDateLabel": "February 2025",
+    "timelineEnabled": true,
+    "timelineSortMs": 1738386000000,
+    "title": "RETR3AT Cybersecurity Conference"
+  },
+  "hackathon-participation-highlights": {
+    "bucket": "competitions",
+    "chips": [
+      "HackUNCP",
+      "AfroPix",
+      "HackNC State (GUARDIAPASS)",
+      "HackNC"
+    ],
+    "dateLine": "",
+    "detailHtml": "<p class=\"kicker\">HackUNCP 2026 - AURA</p>\n          <div class=\"media-grid\">\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/aura/aura1-main-page-with-overview-and-ability-to-listen-to-the-major-news-in-your-field-using-elvenlabs-like-a-podcast-and-add-tasks-to-your-day-plan.jpeg\" alt=\"AURA HackUNCP main page\"><figcaption>AURA main page (HackUNCP 2026)</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/aura/aura-3-page-that-gives-you-update-of-all-important-security-updates-in-your-field-and-important-news-as-well-as-cve-feed.jpeg\" alt=\"AURA security updates page\"><figcaption>AURA security updates feed</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/aura/aura-2page-with-canvas-and-other-learning-management-integration-of-upcoming-tasks-update-and-ai-suggestion.jpeg\" alt=\"AURA learning management integration\"><figcaption>AURA planner and LMS integration</figcaption></figure>\n          </div>\n\n          <p class=\"kicker\">AfroPix26 - Gratitude</p>\n          <div class=\"media-grid\">\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/gratitude/afropix26-group-pic.jpeg\" alt=\"AfroPix26 team\"><figcaption>AfroPix26 team photo</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/gratitude/gratitude-application-logo-for-devpost.jpeg\" alt=\"Gratitude logo\"><figcaption>Gratitude project logo</figcaption></figure>\n            <figure class=\"media-item\"><video controls preload=\"metadata\" src=\"./assets/media/projects/gratitude/afropix26-project-walkthou.mp4\"></video><figcaption>Gratitude project walkthrough</figcaption></figure>\n          </div>\n\n          <p class=\"kicker\">HackNC State 2026 - GUARDIAPASS</p>\n          <div class=\"media-grid\">\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/guardiapass/hackncstate-group-pic.jpeg\" alt=\"GUARDIAPASS team at HackNC State\"><figcaption>GUARDIAPASS team at HackNC State 2026</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/guardiapass/hackncstate26-devpost-win-confirmation-email.jpeg\" alt=\"GUARDIAPASS award confirmation\"><figcaption>GUARDIAPASS placement confirmation</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/guardiapass/hackncstate26-pic-of-a-workshop.jpeg\" alt=\"GUARDIAPASS workshop session\"><figcaption>HackNC State workshop session</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/guardiapass/gaurdiapass3-main-page-with-password-id-and-photo-vault.jpeg\" alt=\"GUARDIAPASS main vault page\"><figcaption>GUARDIAPASS vault dashboard</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/guardiapass/gaurdiapass2-chrome-extension.jpeg\" alt=\"GUARDIAPASS chrome extension\"><figcaption>GUARDIAPASS browser extension</figcaption></figure>\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/guardiapass/gaurdiapass5-website-ai-verifier.jpeg\" alt=\"GUARDIAPASS AI website verifier\"><figcaption>GUARDIAPASS AI website verifier</figcaption></figure>\n          </div>\n\n          <p class=\"kicker\">HackNC 2025 - QuickVest</p>\n          <div class=\"media-grid\">\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/quickvest/quickvestapp-first5-page.jpeg\" alt=\"QuickVest first pages\"><figcaption>QuickVest app prototype screens</figcaption></figure>\n          </div>\n\n          <p class=\"kicker\">HackNC 2024 - TimeVault</p>\n          <div class=\"media-grid\">\n            <figure class=\"media-item\"><img loading=\"lazy\" decoding=\"async\" src=\"./assets/media/projects/timevault/timevault-hacknc2024.jpeg\" alt=\"TimeVault HackNC 2024 interface\"><figcaption>TimeVault interface (HackNC 2024)</figcaption></figure>\n          </div>",
+    "meta": "",
+    "orderIndex": 898,
+    "slug": "hackathon-participation-highlights",
+    "summaryHtml": "",
+    "title": "Hackathon Participation Highlights"
+  }
+}

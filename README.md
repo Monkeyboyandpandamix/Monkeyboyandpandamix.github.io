@@ -46,6 +46,14 @@ Your site URL format:
 - Firestore rules remain in the repo if you want to keep the existing Firestore copy, but the live site no longer depends on Firestore.
 - Firebase Storage must be initialized in the Firebase console before resume uploads and `storage.rules` deployment will work.
 
+## Automatic Repo Sync
+- `.github/workflows/sync-rtdb-snapshot.yml` snapshots RTDB into tracked JSON files every 15 minutes, on manual dispatch, or on a future `repository_dispatch` event named `rtdb-updated`.
+- `scripts/export_rtdb_snapshot.py` writes:
+  - `data/rtdb-export.json`
+  - `data/rtdb/*.json`
+  - `data/rtdb-manifest.json`
+- This keeps the GitHub repo updated automatically when database content changes, without changing how the live GitHub Pages site reads data.
+
 ## What Is Database-Editable
 - `experiencePage` plus `site_experience`: Experience page heading/intro, professional/campus section titles, cards, media, actions, and timeline participation.
 - `courseworkPage`: Academic Coursework title/subtitle, schools, course groups, and Coursework Note.

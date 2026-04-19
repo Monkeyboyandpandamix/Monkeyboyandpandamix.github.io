@@ -1,0 +1,313 @@
+{
+  "achievementCards": [
+    {
+      "bodyHtml": "<p>Top team among all competitors with AURA AI productivity platform.</p>",
+      "meta": "1st Place Overall",
+      "title": "HackUNCP 2026"
+    },
+    {
+      "bodyHtml": "<p>Won first place with Gratitude, a community resource discovery and support platform.</p>",
+      "meta": "1st Place Overall",
+      "title": "AfroPix 2026"
+    },
+    {
+      "bodyHtml": "<p>Third place in competitive agency challenge with GUARDIAPASS cybersecurity platform.</p>",
+      "meta": "3rd Place - Agency Track",
+      "title": "HackNC State 2026"
+    },
+    {
+      "bodyHtml": "<p>Consistently recognized for academic excellence with 3.64 GPA.</p>",
+      "meta": "3 Semesters",
+      "title": "Dean's List"
+    },
+    {
+      "bodyHtml": "<p>Active participant and peer mentor in Guilford College Honors Program.</p>",
+      "meta": "Member & Mentor",
+      "title": "Honors Program"
+    },
+    {
+      "bodyHtml": "<p>Competed in advanced cybersecurity challenges including forensics, exploitation, and cryptography.</p>",
+      "meta": "Competition Participant",
+      "title": "NC National Guard CTF 2025"
+    },
+    {
+      "bodyHtml": "<p>Participated in the Cyber Sentinel challenge hosted by Correlation One on behalf of DoD. Competed for points through Open-Source Intelligence gathering, secure website access challenges, cryptography tasks, and additional cyber challenge categories.</p>",
+      "meta": "National Challenge Participant - June 2025",
+      "title": "DoD CyberSentinel"
+    },
+    {
+      "bodyHtml": "<p>Presented research at Guilford Undergraduate Symposium.</p>",
+      "meta": "April 2024",
+      "title": "Symposium Presenter"
+    },
+    {
+      "bodyHtml": "<p>Leadership training and military discipline development.</p>",
+      "meta": "2024-2025",
+      "title": "Army ROTC"
+    },
+    {
+      "bodyHtml": "<p>Recognized for community impact with QuickVest fintech platform.</p>",
+      "meta": "Best Community Hack",
+      "title": "HackNC 2025"
+    },
+    {
+      "bodyHtml": "<p>Issued August 2025, expires August 2028. Credential ID: 277450228.</p>",
+      "meta": "MHFA Certified",
+      "title": "Adult Mental Health First Aid"
+    },
+    {
+      "bodyHtml": "<p>Issued June 2025. Cisco Networking Academy achievement.</p>",
+      "meta": "Networking Academy",
+      "title": "Cisco Learn-A-Thon 2025"
+    }
+  ],
+  "achievementsBlocks": [
+    {
+      "date": "Future",
+      "description": "Use the portal to replace this with your next milestone, award, or certification update.",
+      "status": "Planned",
+      "subtitle": "Upcoming Competition / Award",
+      "tags": [
+        "Future",
+        "Editable",
+        "Portal Managed"
+      ],
+      "title": "Future Achievement Slot"
+    }
+  ],
+  "achievementsPage": {
+    "editableHeading": "Future / Portal-Managed Blocks",
+    "editableIntro": "These blocks are editable from your admin portal.",
+    "heading": "Achievements & Recognition"
+  },
+  "certifications": {
+    "completed": [
+      {
+        "text": "Cisco Junior Cybersecurity Analyst Career Path"
+      },
+      {
+        "text": "Cisco Networking Basics"
+      },
+      {
+        "text": "Cisco Introduction to Cybersecurity"
+      },
+      {
+        "text": "Cisco Networking Academy Learn-A-Thon 2025"
+      },
+      {
+        "text": "Adult Mental Health First Aid (Expires Aug 2028)"
+      }
+    ],
+    "inProgress": [
+      {
+        "text": "CompTIA Security+"
+      },
+      {
+        "text": "EC-Council Cybersecurity Certificate"
+      },
+      {
+        "text": "Cisco Ethical Hacker"
+      }
+    ]
+  },
+  "competencies": [
+    {
+      "kicker": "Enterprise IT Infrastructure",
+      "subtle": "Active Directory, Okta Administration, Google Admin, Cisco Meraki, Juniper Mist (AP), Juniper Networks, VPN, Network Switches, SolarWinds"
+    },
+    {
+      "kicker": "Cybersecurity & Network Defense",
+      "subtle": "Threat Detection, Firewalls, Network Hardening, Defense-in-Depth, Host-based Intrusion Prevention, Mitigating Network Attacks, Access Controls, Antimalware Protection"
+    },
+    {
+      "kicker": "Security Specializations",
+      "subtle": "Application Security, Cloud Security, Wireless Security (WLANs), Windows Security, Physical Security, System & Endpoint Protection, Network Infrastructure Security"
+    },
+    {
+      "kicker": "Threat Analysis & Vulnerabilities",
+      "subtle": "Common Cyber Threats, IP/TCP/UDP Vulnerabilities, Wireless & Mobile Device Attacks, Defending Systems & Devices, Security Policies/Regulations/Standards"
+    },
+    {
+      "kicker": "Programming & Development",
+      "subtle": "Python, Java, Computer Science, GitHub, Linux Basics, Wireshark, System Security, Data Structures"
+    },
+    {
+      "kicker": "Hardware & Systems Support",
+      "subtle": "Computer Hardware Troubleshooting, Hardware Diagnostics, IT Hardware Support, Hardware Installation, Device Reimaging, Technical Support"
+    },
+    {
+      "kicker": "Software & Applications",
+      "subtle": "Software as a Service (SaaS), Microsoft Office, Microsoft Access, Software Installation, IT Audit"
+    },
+    {
+      "kicker": "Leadership & Professional Skills",
+      "subtle": "Team Leadership, Team Management, Decision-Making, Critical Thinking, Problem Solving, Creative Problem Solving, Communication, Discipline"
+    },
+    {
+      "kicker": "Project & Time Management",
+      "subtle": "Project Management, Time Management, Multitasking, Organization Skills, Workload Prioritization, Planning, Handle Multiple Priorities"
+    },
+    {
+      "kicker": "Education & Mentoring",
+      "subtle": "Teaching, Mentoring, Student Development, Student Counseling, Computer Science Education, Lesson Planning, Research Skills"
+    },
+    {
+      "kicker": "Student Services & Community",
+      "subtle": "Student Affairs, Student Services, Student Housing, Residential Care, Resident Relations, Residential Services, Residential Development, Event Planning, Event Organization"
+    }
+  ],
+  "contactPage": {
+    "actions": [
+      {
+        "external": false,
+        "href": "./index.html",
+        "label": "Back to Home",
+        "variant": "primary"
+      },
+      {
+        "external": false,
+        "href": "./resume.pdf",
+        "label": "Download Resume",
+        "variant": "ghost"
+      },
+      {
+        "external": false,
+        "href": "mailto:mo10141014@gmail.com",
+        "label": "Email Me",
+        "variant": "ghost"
+      },
+      {
+        "external": true,
+        "href": "https://www.linkedin.com/in/mohammadam0",
+        "label": "Connect on LinkedIn",
+        "variant": "ghost"
+      }
+    ],
+    "cards": [
+      {
+        "bodyHtml": "<p>I'm always open to discussing new opportunities, collaborations, or cybersecurity projects.</p>\n        <p><strong>Email:</strong> <a href=\"mailto:mo10141014@gmail.com\">mo10141014@gmail.com</a></p>\n        <p><strong>Location:</strong> Guilford College, Greensboro</p>",
+        "title": "Get in Touch"
+      },
+      {
+        "bodyHtml": "<p><strong>LinkedIn:</strong> <a href=\"https://www.linkedin.com/in/mohammadam0\" target=\"_blank\" rel=\"noopener\">mohammadam0</a></p>\n        <p><strong>GitHub:</strong> <a href=\"https://github.com/Monkeyboyandpandamix\" target=\"_blank\" rel=\"noopener\">Monkeyboyandpandamix</a></p>\n        <p><strong>Devpost:</strong> <a href=\"https://devpost.com/Monkeyboyandpandamix\" target=\"_blank\" rel=\"noopener\">Monkeyboyandpandamix</a></p>\n        <p><strong>Devpost (Old):</strong> <a href=\"https://devpost.com/mo10141014\" target=\"_blank\" rel=\"noopener\">mo10141014</a></p>\n        <p><strong>Status:</strong> Open to internships, research opportunities, and cybersecurity collaborations.</p>",
+        "title": "Profiles"
+      }
+    ],
+    "heading": "Interested in collaborating?",
+    "introHtml": "<p>Let's connect and discuss cybersecurity projects, research opportunities, or internships.</p>"
+  },
+  "courseworkPage": {
+    "categories": [
+      {
+        "items": [
+          "CTIS 210 - Intro to Computer Programming",
+          "CTIS 310 - Data Structures & Algorithms in OOP",
+          "CTIS 321 - Operating Systems"
+        ],
+        "title": "Computer Programming & Development"
+      },
+      {
+        "items": [
+          "CTIS 221 - Fundamentals of Cyber Security",
+          "CTIS 320 - Seminar in Cyber Security",
+          "CTIS 370 - Cyber and Network Security",
+          "CTIS 371 - Digital Forensics",
+          "CTIS 471 - Advanced Cyber and Network Security",
+          "CTIS 322 - Networking Computers"
+        ],
+        "title": "Cybersecurity & Network Security"
+      },
+      {
+        "items": [
+          "CTIS 243 - Management Information Systems",
+          "CTIS 345 - Systems Analysis and Design",
+          "CTIS 342 - Database Systems"
+        ],
+        "title": "Information Systems & Database"
+      },
+      {
+        "items": [
+          "CTIS 260 - Programming Course TA",
+          "CTIS 390 - Cyber and Network Security TA",
+          "CTIS 317 - Fundamentals of Cyber Security TA",
+          "CTIS 390 - Information Technology Internship",
+          "CTIS 470 - CTIS Senior Thesis"
+        ],
+        "title": "Teaching Assistant & Research"
+      }
+    ],
+    "noteHtml": "<p>Comprehensive coursework covering programming fundamentals, advanced algorithms, network security, digital forensics, and systems design. Additional experience gained through teaching assistant positions and internship opportunities.</p>\n      <p class=\"subtle\">Guilford College, Greensboro | Expected Graduation: May 2026 | GPA: 3.64</p>",
+    "panelSubtitle": "17 Courses | Computer Science & Cybersecurity Coursework",
+    "panelTitle": "Academic Coursework"
+  },
+  "eventsPage": {
+    "competitionsHeading": "Capture The Flags & Hackathons Attended",
+    "competitionsIntro": "Competition and challenge events focused on practical cybersecurity and collaborative problem solving.",
+    "heading": "Professional Events & Networking"
+  },
+  "experiencePage": {
+    "campusHeading": "Additional Campus Roles",
+    "heading": "Experience",
+    "intro": "A showcase of my professional journey, technical projects, and competitive accomplishments in cybersecurity and software development.",
+    "professionalHeading": "Professional Experience"
+  },
+  "homeHero": {
+    "actionsHtml": "<a class=\"btn primary\" href=\"./experience.html\">View Experience &amp; Projects</a>\n        <a class=\"btn ghost resume-dynamic\" data-resume-link href=\"./resume.pdf\" download>Download Resume</a>",
+    "eyebrow": "Computer Science & Cybersecurity Professional",
+    "lead": "Focused on cybersecurity and enterprise systems, including network defense, penetration testing, digital forensics, cyber warfare, and IT infrastructure management.",
+    "titleHtml": "<h1>Mohammad <span class=\"accent-block\">Agha Mohammadi</span></h1>"
+  },
+  "homeSummaryHtml": "<p>My interest in technology began with an introductory Python course in high school, where I discovered how programming and logical thinking could be used to solve real-world problems. Since then, I have focused on learning by doing, building systems, experimenting with new technologies, and solving practical challenges through hands-on work.</p>\n      <p>I am currently pursuing dual Bachelor's degrees in Computer Technology Information Systems and Cyber and Network Security at Guilford College. My academic path reflects a strong interest in understanding both how systems work and how they can be secured in real-world environments.</p>\n      <p>Originally from Iran, my multicultural background has shaped the way I approach challenges and learning. Moving between cultures taught me adaptability and persistence, qualities that influence how I work and solve problems today.</p>\n      <p>I am naturally drawn to hands-on projects because they allow me to explore ideas in a practical way. I enjoy breaking down complex systems, understanding how they function, and improving them through experimentation and iteration.</p>\n      <p>I value collaboration and enjoy working with others who share an interest in technology. Whether working independently or as part of a team, I am motivated by curiosity, problem-solving, and the process of building something meaningful.</p>",
+  "projectsPage": {
+    "heading": "Key Projects & Technical Work",
+    "intro": "Full project documentation with detailed context, architecture, impact, and media."
+  },
+  "quickHighlights": [
+    {
+      "body": "Enterprise IT support, cybersecurity simulations, and educational leadership.",
+      "title": "Professional Experience"
+    },
+    {
+      "body": "1st place at HackUNCP and AfroPix26, 3rd place at NC State, and multiple awards.",
+      "title": "Top Performer - Hackathon Success"
+    },
+    {
+      "body": "3.64 GPA, Honors Program member, and 3x Dean's List recipient.",
+      "title": "Academic Excellence"
+    }
+  ],
+  "resumeUrl": "./resume.pdf",
+  "settings": {
+    "redPages": [
+      "timeline.html"
+    ],
+    "timelineHideProjects": false
+  },
+  "timelinePage": {
+    "heading": "Project, Roles & Achievement Timeline",
+    "intro": "Integrated timeline ordered by recent milestones across projects, events, and roles. Red-highlighted entries indicate jobs/roles/experience."
+  },
+  "verifyLinks": [
+    {
+      "category": "Hackathon",
+      "label": "Devpost (Add URL)",
+      "page": "projects.html",
+      "target": "AURA (HackUNCP26)",
+      "url": "#"
+    },
+    {
+      "category": "Hackathon",
+      "label": "Devpost (Add URL)",
+      "page": "projects.html",
+      "target": "GUARDIAPASS (HackNC State26)",
+      "url": "#"
+    },
+    {
+      "category": "Hackathon",
+      "label": "Devpost / Proof (Add URL)",
+      "page": "projects.html",
+      "target": "Gratitude (AfroPix26)",
+      "url": "#"
+    }
+  ]
+}
