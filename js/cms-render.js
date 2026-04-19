@@ -815,16 +815,21 @@
     const contactEmail = (cfg.contactPage && cfg.contactPage.email) || cfg.contactEmail;
     if (contactEmail) applyContactEmail(contactEmail);
 
-    // Projects, Events, Timeline: admin owns the source of truth, but we only
-    // replace the static fallback if the CMS list is "complete enough" so that
-    // a stale or partial Firebase snapshot can't wipe a richer static page.
-    // Threshold: CMS must have at least ~50% as many items as the static
-    // fallback (and at least 1). Below that, we keep the static and log why.
-    function canTrustCmsList(staticCount, cmsCount, label) {
-      const min = Math.max(1, Math.floor(staticCount * 0.5));
-      const ok = cmsCount >= min;
+    // Projects, Events, Timeline are CMS-driven, but only AFTER the admin has
+    // explicitly clicked Save Changes (which publishes the collections and
+    // sets cfg.cmsCollectionsActive[<key>] = true). Until then, we use the
+    // safe-swap guard so stale or partial Firebase data can't wipe a
+    // richer static page (the "load-then-break" regression).
+    const activeFlags = (cfg.cmsCollectionsActive && typeof cfg.cmsCollectionsActive === 'object')
+      ? cfg.cmsCollectionsActive
+      : {};
+    function canTrustCmsList(staticCount, cmsCount, key) {
+      if (!cmsCount) return false;
+      if (activeFlags[key] === true) return true; // admin explicitly published
+      // Conservative pre-publish guard: only swap if CMS matches/exceeds static.
+      const ok = cmsCount >= staticCount;
       if (!ok) {
-        console.info(`[CMS] Keeping static ${label} (CMS has ${cmsCount}, needs ≥ ${min} of ${staticCount} static).`);
+        console.info(`[CMS] Keeping static ${key} (CMS has ${cmsCount}, static has ${staticCount}; click Save Changes in admin to make CMS authoritative).`);
       }
       return ok;
     }
@@ -834,7 +839,7 @@
     const fbP = document.getElementById('projects-static-fallback');
     if (mountP && fbP && projects.length) {
       const staticCount = fbP.querySelectorAll('article').length;
-      if (canTrustCmsList(staticCount, projects.length, 'projects')) {
+      if (canTrustCmsList(staticCount, projects.length, 'projects')) { // key matches activeFlags
         const projHtml = projects
           .sort((a, b) => {
             const bo = Number(b.orderIndex);
