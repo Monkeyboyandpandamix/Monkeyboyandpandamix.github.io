@@ -1,4 +1,18 @@
 {
+  "hosting": {
+    "site": "website-9a938",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "**/.*",
+      "**/node_modules/**",
+      "scripts/**",
+      "data/**",
+      "README.md",
+      "firebase-debug.log"
+    ]
+  },
   "database": {
     "rules": "database.rules.json"
   },
