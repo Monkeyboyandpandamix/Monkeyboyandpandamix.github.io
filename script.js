@@ -29,6 +29,11 @@ if (currentFile === 'projects.html') {
   document.querySelectorAll('.reveal').forEach((el) => el.classList.add('show'));
 }
 
+/* Admin dashboard: all sections use .reveal; they must be visible immediately so tabs and forms work (IntersectionObserver can leave them at opacity:0). */
+if (currentFile === 'admin.html') {
+  document.querySelectorAll('#admin-root .reveal').forEach((el) => el.classList.add('show'));
+}
+
 function initExpandableBlocks() {
   const isInteractiveTarget = (target) => {
     return !!target.closest('a, button, input, select, textarea, video, iframe, label, summary, [role="button"]');
@@ -535,7 +540,7 @@ function initGlobalFooterLinks() {
           <span>Facebook</span>
         </a>
       </nav>
-      <p>&copy; 2026 Mohammad Agha Mohammadi Cyber - all rights reserved Content and design are monitored and protected for digital security compliance.</p>
+      <p>&copy; ${new Date().getFullYear()} Mohammad Agha Mohammadi Cyber - all rights reserved Content and design are monitored and protected for digital security compliance.</p>
     </div>
   `;
 }
@@ -631,12 +636,14 @@ window.mamReinitAfterCms = function mamReinitAfterCms() {
 
 // Basic analytics: local metrics + optional global counter.
 (function trackVisitorMetrics() {
+  const path = window.location.pathname.split('/').pop() || 'index.html';
+  /** Admin dashboard: skip third-party counter (often blocked / DNS failures) — keeps console clean for troubleshooting. */
+  if (path === 'admin.html') return;
+
   const LOCAL_KEY = 'site_metrics_local_v1';
   const GLOBAL_KEY = 'site_metrics_global_v1';
   const COUNTAPI_NAMESPACE = 'mohammad-techprofile';
   const COUNTAPI_KEY = 'website-visits';
-
-  const path = window.location.pathname.split('/').pop() || 'index.html';
   const now = new Date().toISOString();
 
   let metrics = { total: 0, pages: {}, lastVisit: null };
@@ -651,7 +658,11 @@ window.mamReinitAfterCms = function mamReinitAfterCms() {
   metrics.lastVisit = now;
   localStorage.setItem(LOCAL_KEY, JSON.stringify(metrics));
 
-  fetch(`https://api.countapi.xyz/hit/${COUNTAPI_NAMESPACE}/${COUNTAPI_KEY}`)
+  const countOpts =
+    typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+      ? { signal: AbortSignal.timeout(5000) }
+      : {};
+  fetch(`https://api.countapi.xyz/hit/${COUNTAPI_NAMESPACE}/${COUNTAPI_KEY}`, countOpts)
     .then((res) => res.json())
     .then((data) => {
       if (typeof data.value === 'number') {

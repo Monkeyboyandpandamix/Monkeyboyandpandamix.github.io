@@ -1,5 +1,5 @@
 /**
- * Realtime Database + Auth helpers for GitHub Pages CMS.
+ * Realtime Database + Auth helpers for the live Firebase-hosted CMS.
  * Paths: config/site, site_projects, site_events, site_roles, site_experience
  */
 (function () {
@@ -73,7 +73,14 @@
 
   async function loadAllCmsData() {
     initFirebase();
-    if (!firebase.apps.length) return null;
+    if (!firebase.apps.length) {
+      window.AdminTroubleshootLog?.warn(
+        'cms-api',
+        'loadAllCmsData: no Firebase app (firebase.apps.length=0). Check firebase-config / SDK load order.'
+      );
+      return null;
+    }
+    window.AdminTroubleshootLog?.debug('cms-api', 'loadAllCmsData: reading RTDB branches', { paths: CMS_PATHS.slice() });
     const values = await Promise.all(CMS_PATHS.map((path) => rootRef(path).once('value').then((snap) => snap.val())));
     const raw = {
       config: { site: values[0] },
@@ -85,13 +92,55 @@
     return normalizeCmsData(raw);
   }
 
+  /**
+   * Live-updates: listen to each CMS branch (not the DB root) so visitors do not re-download
+   * the entire tree on every tiny write. Prefer loadAllCmsData() on public pages.
+   */
   function watchAllCmsData(callback) {
     initFirebase();
     if (!firebase.apps.length) return () => {};
-    const ref = db().ref();
-    const handler = (snap) => callback(normalizeCmsData(snap.val()));
-    ref.on('value', handler, (error) => console.warn('[CMS] RTDB watch failed', error));
-    return () => ref.off('value', handler);
+    const values = new Array(CMS_PATHS.length);
+    const synced = new Array(CMS_PATHS.length).fill(false);
+    let debounceTimer = null;
+    let canceled = false;
+
+    function emit() {
+      if (canceled) return;
+      const raw = {
+        config: { site: values[0] },
+        site_projects: values[1],
+        site_events: values[2],
+        site_roles: values[3],
+        site_experience: values[4],
+      };
+      callback(normalizeCmsData(raw));
+    }
+
+    function scheduleEmit() {
+      if (debounceTimer != null) window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => {
+        debounceTimer = null;
+        emit();
+      }, 48);
+    }
+
+    const unsubs = CMS_PATHS.map((path, i) => {
+      const ref = rootRef(path);
+      const handler = (snap) => {
+        values[i] = snap.val();
+        synced[i] = true;
+        if (!synced.every(Boolean)) return;
+        scheduleEmit();
+      };
+      ref.on('value', handler, (error) => console.warn('[CMS] RTDB watch failed', path, error));
+      return () => ref.off('value', handler);
+    });
+
+    return () => {
+      canceled = true;
+      if (debounceTimer != null) window.clearTimeout(debounceTimer);
+      unsubs.forEach((fn) => fn());
+    };
   }
 
   function buildPortalPayload(cfg) {

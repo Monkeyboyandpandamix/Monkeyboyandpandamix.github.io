@@ -1,6 +1,6 @@
 /**
  * Visitor accessibility: contrast themes + text scaling (persisted in localStorage).
- * Works alongside Firestore CMS theme when "Site default (CMS)" is selected.
+ * Works alongside CMS theme from Realtime Database when "Site default (CMS)" is selected.
  */
 (function () {
   const KEY_COLOR = 'mam_a11y_color';
@@ -35,8 +35,8 @@
       if (window.MamCms && typeof window.MamCms.clearCmsThemeInlineVars === 'function') {
         window.MamCms.clearCmsThemeInlineVars();
       }
-    } else if (window.MamCms && typeof window.MamCms.reapplyFirestoreTheme === 'function') {
-      window.MamCms.reapplyFirestoreTheme();
+    } else if (window.MamCms && typeof window.MamCms.reapplyCmsTheme === 'function') {
+      window.MamCms.reapplyCmsTheme();
     }
   }
 
@@ -169,8 +169,8 @@
 
     document.addEventListener('mam-cms-ready', () => {
       const mode = safeGet(KEY_COLOR, 'default');
-      if (mode === 'default' && window.MamCms && typeof window.MamCms.reapplyFirestoreTheme === 'function') {
-        window.MamCms.reapplyFirestoreTheme();
+      if (mode === 'default' && window.MamCms && typeof window.MamCms.reapplyCmsTheme === 'function') {
+        window.MamCms.reapplyCmsTheme();
       }
     });
   }

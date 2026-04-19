@@ -1,6 +1,6 @@
 # Multi-Page Tech Profile Website
 
-Black-theme portfolio website ready for GitHub Pages deployment.
+Firebase Hosting + Realtime Database portfolio and admin CMS.
 
 ## Pages
 - `index.html` (home, summary, competencies, certifications)
@@ -14,16 +14,11 @@ Black-theme portfolio website ready for GitHub Pages deployment.
 - `login.html` (portal login)
 - `admin.html` (portal editor + metrics dashboard)
 
-## Deploy on GitHub Pages
-1. Create a GitHub repository.
-2. Push all files in this folder to the repository root.
-3. Open `Settings -> Pages`.
-4. Set Source to `Deploy from a branch`.
-5. Select branch `main` and folder `/ (root)`.
-6. Save and wait for deploy.
-
-Your site URL format:
-`https://<your-username>.github.io/<repo-name>/`
+## Deploy on Firebase Hosting
+1. Make sure `.firebaserc` points at the correct Firebase project.
+2. Deploy hosting with `firebase deploy --only hosting`.
+3. Deploy Realtime Database rules with `firebase deploy --only database`.
+4. Deploy Storage rules with `firebase deploy --only storage` after Storage is initialized in Firebase Console.
 
 ## Resume Download
 - Place your resume file at `resume.pdf` in the project root.
@@ -31,28 +26,18 @@ Your site URL format:
 
 ## Portal + Metrics
 - Open `login.html` to set/login with a portal password.
-- After login, use `admin.html` to add/edit/delete achievement blocks.
-- Blocks render automatically on `achievements.html`.
+- After login, use `admin.html` to edit the site through page-based CMS tabs.
 - Visitor metrics tracked:
   - Local per-page views and last visit (browser-local)
   - Global counter via CountAPI (`https://api.countapi.xyz`)
 
 ## Firebase CMS
 - Firebase project is configured as `website-9a938` in `.firebaserc`.
-- The site now reads live content from Firebase Realtime Database, which works fine on GitHub Pages because the browser fetches data client-side.
+- The site reads live content from Firebase Realtime Database and is hosted on Firebase Hosting.
 - Open `admin.html`, click `Load Current Site Into CMS` to convert the current static pages into CMS JSON, then click `Publish All To Realtime DB`.
 - Or seed directly from the terminal with `python3 scripts/seed_rtdb.py`.
 - Deploy RTDB rules with `firebase deploy --only database`.
-- Firestore rules remain in the repo if you want to keep the existing Firestore copy, but the live site no longer depends on Firestore.
 - Firebase Storage must be initialized in the Firebase console before resume uploads and `storage.rules` deployment will work.
-
-## Automatic Repo Sync
-- `.github/workflows/sync-rtdb-snapshot.yml` snapshots RTDB into tracked JSON files every 15 minutes, on manual dispatch, or on a future `repository_dispatch` event named `rtdb-updated`.
-- `scripts/export_rtdb_snapshot.py` writes:
-  - `data/rtdb-export.json`
-  - `data/rtdb/*.json`
-  - `data/rtdb-manifest.json`
-- This keeps the GitHub repo updated automatically when database content changes, without changing how the live GitHub Pages site reads data.
 
 ## What Is Database-Editable
 - `experiencePage` plus `site_experience`: Experience page heading/intro, professional/campus section titles, cards, media, actions, and timeline participation.

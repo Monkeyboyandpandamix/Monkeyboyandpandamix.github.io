@@ -1,7 +1,197 @@
 /**
+ * Buffered troubleshooting log — bundled here so admin never depends on a second script request.
+ */
+(function adminTroubleshootLogBundle() {
+  const MAX_ENTRIES = 400;
+  const entries = [];
+
+  function isoTime() {
+    return new Date().toISOString();
+  }
+
+  function safeStringify(obj, maxLen) {
+    try {
+      const s = JSON.stringify(obj, null, 2);
+      const cap = maxLen ?? 12000;
+      return s.length > cap ? `${s.slice(0, cap)}\n… (truncated)` : s;
+    } catch (e) {
+      return `[stringify error: ${e.message}]`;
+    }
+  }
+
+  function formatDetail(detail) {
+    if (detail === undefined || detail === null) return '';
+    if (detail instanceof Error) {
+      return `\n${detail.stack || detail.message}`;
+    }
+    if (typeof detail === 'object') {
+      return `\n${safeStringify(detail)}`;
+    }
+    const s = String(detail);
+    return s.length > 8000 ? `\n${s.slice(0, 8000)}…` : `\n${s}`;
+  }
+
+  function flush() {
+    const el = document.getElementById('admin-troubleshoot-log-output');
+    if (!el) return;
+    el.textContent = entries.join('\n\n');
+    try {
+      el.scrollTop = el.scrollHeight;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function log(level, category, message, detail) {
+    const line = `[${isoTime()}] ${level.toUpperCase()} [${category}] ${message}${formatDetail(detail)}`;
+    entries.push(line);
+    if (entries.length > MAX_ENTRIES) entries.splice(0, entries.length - MAX_ENTRIES);
+    flush();
+
+    const prefix = `[Admin troubleshoot] [${category}] ${message}`;
+    if (level === 'error') console.error(prefix, detail ?? '');
+    else if (level === 'warn') console.warn(prefix, detail ?? '');
+    else if (level === 'debug') console.debug(prefix, detail ?? '');
+    else console.info(prefix, detail ?? '');
+  }
+
+  function maskEmail(email) {
+    if (!email || typeof email !== 'string') return '(none)';
+    const at = email.indexOf('@');
+    if (at < 1) return '(invalid)';
+    const user = email.slice(0, at);
+    const domain = email.slice(at + 1);
+    const vis = user.length <= 2 ? user[0] + '*' : user.slice(0, 2) + '***';
+    return `${vis}@${domain}`;
+  }
+
+  function snapshotEnvironment(extra) {
+    const nav = typeof performance !== 'undefined' && performance.timing ? performance.timing.navigationStart : null;
+    log('info', 'environment', 'Environment snapshot', {
+      href: typeof location !== 'undefined' ? location.href : '?',
+      protocol: typeof location !== 'undefined' ? location.protocol : '?',
+      origin: typeof location !== 'undefined' ? location.origin : '?',
+      pathname: typeof location !== 'undefined' ? location.pathname : '?',
+      readyState: typeof document !== 'undefined' ? document.readyState : '?',
+      referrer: typeof document !== 'undefined' ? document.referrer || '(none)' : '?',
+      onLine: typeof navigator !== 'undefined' ? navigator.onLine : '?',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '?',
+      navigationStartMs: nav,
+      firebaseGlobal: typeof firebase !== 'undefined',
+      cmsApi: typeof window.CmsApi !== 'undefined',
+      initAdminCmsExtensions: typeof window.initAdminCmsExtensions === 'function',
+      ...(extra && typeof extra === 'object' ? extra : {}),
+    });
+  }
+
+  window.AdminTroubleshootLog = {
+    log,
+    debug: (c, m, d) => log('debug', c, m, d),
+    info: (c, m, d) => log('info', c, m, d),
+    warn: (c, m, d) => log('warn', c, m, d),
+    error: (c, m, d) => log('error', c, m, d),
+    maskEmail,
+    snapshotEnvironment,
+    flush,
+    clear: () => {
+      entries.length = 0;
+      flush();
+    },
+    getText: () => entries.join('\n\n'),
+    rerender: flush,
+  };
+
+  log('info', 'bootstrap', 'Admin troubleshoot logger loaded (bundled in admin-cms.js)');
+
+  window.addEventListener('error', (ev) => {
+    log('error', 'window.onerror', ev.message || 'Error', {
+      filename: ev.filename,
+      lineno: ev.lineno,
+      colno: ev.colno,
+      error: ev.error ? ev.error.stack || String(ev.error) : undefined,
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (ev) => {
+    const reason = ev.reason;
+    log('error', 'unhandledrejection', reason instanceof Error ? reason.message : String(reason), reason);
+  });
+
+  function wireUi() {
+    snapshotEnvironment();
+    flush();
+
+    const copyBtn = document.getElementById('admin-troubleshoot-copy');
+    const clearBtn = document.getElementById('admin-troubleshoot-clear');
+    const refreshBtn = document.getElementById('admin-troubleshoot-refresh');
+
+    copyBtn?.addEventListener('click', async () => {
+      const text = window.AdminTroubleshootLog.getText();
+      try {
+        await navigator.clipboard.writeText(text);
+        window.AdminTroubleshootLog.info('ui', 'Log copied to clipboard', { chars: text.length });
+      } catch (e) {
+        window.AdminTroubleshootLog.warn('ui', 'Clipboard failed — select the log manually', e.message || e);
+      }
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      window.AdminTroubleshootLog.clear();
+      window.AdminTroubleshootLog.info('ui', 'Log cleared by user');
+    });
+
+    refreshBtn?.addEventListener('click', () => {
+      window.AdminTroubleshootLog.info('ui', 'Manual environment refresh requested');
+      snapshotEnvironment({
+        firebaseApps: typeof firebase !== 'undefined' && firebase.apps ? firebase.apps.length : null,
+        currentUserEmailMasked:
+          typeof window.CmsApi !== 'undefined' && window.CmsApi.getCurrentUser
+            ? window.AdminTroubleshootLog.maskEmail(window.CmsApi.getCurrentUser()?.email || '')
+            : '(CmsApi unavailable)',
+        isAdminUser:
+          typeof window.CmsApi !== 'undefined' && window.CmsApi.isAdminUser ? window.CmsApi.isAdminUser() : null,
+      });
+    });
+
+    requestAnimationFrame(() => {
+      flush();
+      requestAnimationFrame(flush);
+    });
+  }
+
+  /** Wire UI only after every deferred script has run. Never call wireUi synchronously here: admin-cms.js runs before cms-api.js, and this IIFE runs before the Page Editor IIFE below — early snapshots falsely showed cmsApi/initAdmin=false. */
+  let wireRan = false;
+  function runWireUiOnce() {
+    if (wireRan) return;
+    wireRan = true;
+    window.AdminTroubleshootLog.info(
+      'bootstrap',
+      document.readyState === 'complete' || document.readyState === 'interactive'
+        ? 'Scheduling troubleshooting UI after full script queue (CMS API + Page Editor defs now on window)'
+        : 'DOMContentLoaded — deferred scripts finished'
+    );
+    wireUi();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runWireUiOnce);
+  } else {
+    setTimeout(runWireUiOnce, 0);
+  }
+})();
+
+/**
  * Extended admin: Realtime Database resume, config JSON fields, collection bulk publish.
  */
 (function () {
+  /** Structured log for admin dashboard (bundled logger above). */
+  function ts(level, category, message, detail) {
+    const L = window.AdminTroubleshootLog;
+    if (!L) return;
+    const fn = L[level];
+    if (typeof fn === 'function') fn.call(L, category, message, detail);
+  }
+
   const STATIC_PAGES = [
     'index.html',
     'projects.html',
@@ -53,15 +243,28 @@
   }
 
   async function fillFormFromFirebase() {
+    ts('info', 'admin-cms', 'fillFormFromFirebase: calling CmsApi.loadAllCmsData()');
     let data;
     try {
       data = await window.CmsApi.loadAllCmsData();
     } catch (e) {
+      ts('error', 'admin-cms', 'fillFormFromFirebase: loadAllCmsData() threw', e);
       console.warn(e);
       return;
     }
-    if (!data) return;
+    if (!data) {
+      ts('warn', 'admin-cms', 'fillFormFromFirebase: no data (null). Check Firebase init, RTDB rules, and network.');
+      return;
+    }
     const c = data.config || {};
+    ts('info', 'admin-cms', 'fillFormFromFirebase: received snapshot', {
+      hasResumeUrl: !!c.resumeUrl,
+      homeHeroKeyCount: c.homeHero && typeof c.homeHero === 'object' ? Object.keys(c.homeHero).length : 0,
+      projectsCount: Array.isArray(data.projects) ? data.projects.length : null,
+      eventsCount: Array.isArray(data.events) ? data.events.length : null,
+      rolesCount: Array.isArray(data.roles) ? data.roles.length : null,
+      experienceCount: Array.isArray(data.experience) ? data.experience.length : null,
+    });
 
     setTextarea('resume-url-field', c.resumeUrl);
     setTextarea('home-summary-html-field', c.homeSummaryHtml);
@@ -137,9 +340,24 @@
   }
 
   async function fetchPageDoc(path) {
-    const res = await fetch(`./${path}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to load ${path}`);
+    const url = `./${path}`;
+    ts('debug', 'static-import', `GET ${url}`);
+    let res;
+    try {
+      res = await fetch(url, { cache: 'no-store' });
+    } catch (e) {
+      ts('error', 'static-import', `fetch() failed for ${path}`, {
+        message: e.message || String(e),
+        hint: 'Opening admin as file:// breaks fetch; use http://localhost or HTTPS hosting.',
+      });
+      throw e;
+    }
+    if (!res.ok) {
+      ts('error', 'static-import', `HTTP ${res.status} for ${path}`, { url, status: res.status, statusText: res.statusText });
+      throw new Error(`Failed to load ${path}`);
+    }
     const raw = await res.text();
+    ts('info', 'static-import', `OK ${path}`, { bytes: raw.length });
     return new DOMParser().parseFromString(raw, 'text/html');
   }
 
@@ -388,7 +606,9 @@
   }
 
   async function loadStaticSiteIntoEditor() {
+    ts('info', 'admin-cms', 'loadStaticSiteIntoEditor: start', { pages: STATIC_PAGES.slice() });
     const docs = await fetchStaticDocs();
+    ts('info', 'admin-cms', 'loadStaticSiteIntoEditor: all static pages fetched');
     const timelineIndex = buildTimelineIndex(docs['timeline.html']);
     const config = buildIndexConfig(docs['index.html']);
     config.contactPage = buildContactConfig(docs['contact.html']);
@@ -437,9 +657,13 @@
     setTextarea('bulk-events-json', buildEventsSeed(docs['events.html'], timelineIndex));
     setTextarea('bulk-roles-json', buildRolesSeed(docs['timeline.html']));
     setTextarea('bulk-experience-json', buildExperienceSeed(docs['experience.html']));
+    ts('info', 'admin-cms', 'loadStaticSiteIntoEditor: textareas populated', {
+      editorLooksEmpty: editorLooksEmpty(),
+    });
   }
 
   function collectConfigPayloadFromEditor() {
+    syncFriendlyEditorsToJson();
     const payload = {
       verifyLinks: typeof getVerifyLinks === 'function' ? getVerifyLinks() : [],
       media: typeof getMediaItems === 'function' ? getMediaItems() : [],
@@ -475,9 +699,17 @@
   }
 
   function makeFriendlyEditorCard(title, fieldsHtml) {
-    const card = document.createElement('article');
+    const card = document.createElement('details');
     card.className = 'admin-editor-card';
-    card.innerHTML = `<h4>${title}</h4><div class="form-grid">${fieldsHtml}</div><div class="actions"><button class="btn ghost" type="button" data-action="remove">Remove</button></div>`;
+    card.open = true;
+    const summary = document.createElement('summary');
+    summary.className = 'admin-editor-card-summary';
+    summary.textContent = title;
+    const inner = document.createElement('div');
+    inner.className = 'admin-editor-card-inner';
+    inner.innerHTML = `<div class="form-grid">${fieldsHtml}</div><div class="actions"><button class="btn ghost" type="button" data-action="remove">Remove</button></div>`;
+    card.appendChild(summary);
+    card.appendChild(inner);
     return card;
   }
 
@@ -489,11 +721,13 @@
   }
 
   function bindAdminTabs() {
+    const tablist = document.querySelector('.admin-tabs');
     const tabs = [...document.querySelectorAll('[data-admin-tab]')];
     const panels = [...document.querySelectorAll('[data-admin-panel]')];
     if (!tabs.length || !panels.length) return () => {};
 
     const openTab = (name) => {
+      if (!name) return;
       tabs.forEach((tab) => {
         const active = tab.getAttribute('data-admin-tab') === name;
         tab.classList.toggle('is-active', active);
@@ -502,18 +736,64 @@
       panels.forEach((panel) => {
         const active = panel.getAttribute('data-admin-panel') === name;
         panel.classList.toggle('is-active', active);
-        panel.hidden = !active;
+        if (active) {
+          panel.removeAttribute('hidden');
+        } else {
+          panel.setAttribute('hidden', '');
+        }
       });
     };
 
-    tabs.forEach((tab) => {
-      if (tab.dataset.bound) return;
-      tab.dataset.bound = '1';
-      tab.addEventListener('click', () => openTab(tab.getAttribute('data-admin-tab')));
-    });
+    if (tablist && tablist.dataset.tabDelegateBound !== '1') {
+      tablist.dataset.tabDelegateBound = '1';
+      tablist.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-admin-tab]');
+        if (!btn || !tablist.contains(btn)) return;
+        openTab(btn.getAttribute('data-admin-tab'));
+      });
+    }
 
-    openTab(tabs.find((tab) => tab.classList.contains('is-active'))?.getAttribute('data-admin-tab') || tabs[0].getAttribute('data-admin-tab'));
+    const initial =
+      tabs.find((tab) => tab.classList.contains('is-active'))?.getAttribute('data-admin-tab') ||
+      tabs[0]?.getAttribute('data-admin-tab') ||
+      'home';
+    openTab(initial);
     return openTab;
+  }
+
+  /**
+   * True when the textarea has no real content (empty array/object, empty certs, etc.).
+   * Used so we still import static site copy when Firebase has placeholder JSON like {} or {"completed":[],"inProgress":[]}.
+   */
+  function isEffectivelyEmptyJsonField(id) {
+    const raw = document.getElementById(id)?.value?.trim();
+    if (!raw) return true;
+    if (raw === '[]' || raw === '{}') return true;
+    try {
+      const v = JSON.parse(raw);
+      if (Array.isArray(v)) return v.length === 0;
+      if (v && typeof v === 'object') {
+        if (id === 'certifications-json-field') {
+          const comp = Array.isArray(v.completed) ? v.completed : [];
+          const prog = Array.isArray(v.inProgress) ? v.inProgress : [];
+          return comp.length === 0 && prog.length === 0;
+        }
+        if (id === 'home-hero-json-field') {
+          const strip = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          const has =
+            strip(v.eyebrow) ||
+            strip(v.lead) ||
+            strip(v.title) ||
+            strip(v.titleHtml) ||
+            strip(v.actionsHtml);
+          return !has;
+        }
+        return Object.keys(v).length === 0;
+      }
+    } catch {
+      return false;
+    }
+    return false;
   }
 
   function editorLooksEmpty() {
@@ -525,16 +805,15 @@
       'contact-page-json-field',
       'coursework-page-json-field',
       'home-hero-json-field',
+      'quick-highlights-json-field',
+      'competencies-json-field',
+      'certifications-json-field',
     ];
-    return textareas.every((id) => {
-      const value = document.getElementById(id)?.value?.trim();
-      return !value || value === '[]' || value === '{}';
-    });
+    return textareas.every(isEffectivelyEmptyJsonField);
   }
 
   function fieldHasMeaningfulValue(id) {
-    const value = document.getElementById(id)?.value?.trim();
-    return !!value && value !== '[]' && value !== '{}';
+    return !isEffectivelyEmptyJsonField(id);
   }
 
   async function hydrateMissingEditorSectionsFromStatic() {
@@ -558,7 +837,12 @@
       experience: !fieldHasMeaningfulValue('bulk-experience-json'),
     };
 
-    if (!Object.values(needsStatic).some(Boolean)) return;
+    const needEntries = Object.entries(needsStatic).filter(([, v]) => v);
+    ts('info', 'admin-cms', 'hydrateMissingEditorSectionsFromStatic', {
+      sectionCount: needEntries.length,
+      sections: needEntries.map(([k]) => k),
+    });
+    if (!needEntries.length) return;
 
     const docs = await fetchStaticDocs();
     const timelineIndex = buildTimelineIndex(docs['timeline.html']);
@@ -626,6 +910,7 @@
     if (needsStatic.experience) {
       setTextarea('bulk-experience-json', buildExperienceSeed(docs['experience.html']));
     }
+    ts('info', 'admin-cms', 'hydrateMissingEditorSectionsFromStatic: done');
   }
 
   function projectEditorCard(item, index) {
@@ -634,12 +919,16 @@
       <label>Slug<input data-field="slug" value="${escapeAttr(item.slug)}" /></label>
       <label>Date<input data-field="dateLine" value="${escapeAttr(item.dateLine)}" /></label>
       <label>Category<select data-field="category"><option value="software">Software</option><option value="hardware">Hardware</option><option value="hybrid">Hybrid</option></select></label>
+      <p class="subtle full">Hardware or Hybrid adds the ⚙ gear and hardware-styled tags. Tags are comma-separated; include the word <strong>hardware</strong> in a tag for an extra hardware chip.</p>
+      <label class="full admin-checkbox-row"><input type="checkbox" data-field="showHardwareGear" /> Show ⚙ gear for <strong>Software</strong> projects (optional)</label>
       <label class="full">Summary<textarea data-field="summary" rows="3">${escapeAttr(item.summaryText)}</textarea></label>
       <label class="full">Details<textarea data-field="details" rows="4">${escapeAttr(item.detailText)}</textarea></label>
-      <label>Tags<input data-field="chips" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
+      <label>Tags (comma-separated)<input data-field="chips" placeholder="Python, Raspberry Pi, hardware" value="${escapeAttr((item.chips || []).join(', '))}" /></label>
       <label>Media URLs (one per line)<textarea data-field="media" rows="4">${escapeAttr((item.media || []).map((m) => m.src || '').join('\n'))}</textarea></label>
     `);
     card.querySelector('[data-field="category"]').value = item.category || 'software';
+    const gearCb = card.querySelector('[data-field="showHardwareGear"]');
+    if (gearCb) gearCb.checked = !!(item.showHardwareGear === true || item.showHardwareGear === 'true');
     card.querySelector('[data-action="remove"]').addEventListener('click', () => {
       const list = getFriendlyProjects();
       list.splice(index, 1);
@@ -691,7 +980,8 @@
   }
 
   function schoolEditorCard(item, index) {
-    const categoriesText = (item.categories || [])
+    const cats = Array.isArray(item.categories) ? item.categories : [];
+    const categoriesText = cats
       .map((cat) => `${cat.title || 'Category'}: ${(cat.items || []).map((entry) => (typeof entry === 'string' ? entry : [entry.code, entry.name].filter(Boolean).join(' - '))).join(' | ')}`)
       .join('\n');
     const card = makeFriendlyEditorCard(`School ${index + 1}`, `
@@ -831,20 +1121,24 @@
   }
 
   function setFriendlyProjects(items) {
-    const out = items.map((item, index) => ({
-      slug: item.slug || makeSlug(item.title, `project-${index + 1}`),
-      title: item.title || '',
-      dateLine: item.dateLine || '',
-      category: item.category || 'software',
-      summaryHtml: item.summaryText ? `<p>${item.summaryText}</p>` : '',
-      detailHtml: item.detailText ? `<p>${item.detailText.split('\n').join('</p><p>')}</p>` : '',
-      chips: splitComma(item.chips || ''),
-      media: splitLines(item.media || '').map((src) => ({ type: 'image', src })),
-      timelineDateLabel: item.timelineDateLabel || item.dateLine || '',
-      timelineEnabled: item.timelineEnabled !== false,
-      timelineSortMs: item.timelineSortMs || parseTimelineSortMs(item.dateLine || ''),
-      orderIndex: item.orderIndex || 1000 - index,
-    }));
+    const out = items.map((item, index) => {
+      const row = {
+        slug: item.slug || makeSlug(item.title, `project-${index + 1}`),
+        title: item.title || '',
+        dateLine: item.dateLine || '',
+        category: item.category || 'software',
+        summaryHtml: item.summaryText ? `<p>${item.summaryText}</p>` : '',
+        detailHtml: item.detailText ? `<p>${item.detailText.split('\n').join('</p><p>')}</p>` : '',
+        chips: splitComma(item.chips || ''),
+        media: splitLines(item.media || '').map((src) => ({ type: 'image', src })),
+        timelineDateLabel: item.timelineDateLabel || item.dateLine || '',
+        timelineEnabled: item.timelineEnabled !== false,
+        timelineSortMs: item.timelineSortMs || parseTimelineSortMs(item.dateLine || ''),
+        orderIndex: item.orderIndex || 1000 - index,
+      };
+      if (item.showHardwareGear === true) row.showHardwareGear = true;
+      return row;
+    });
     setTextarea('bulk-projects-json', out);
   }
 
@@ -897,7 +1191,20 @@
 
   function getFriendlySchools() {
     const coursework = parseFieldJson('coursework-page-json-field', {});
-    return Array.isArray(coursework.institutions) ? coursework.institutions.map((item) => ({ ...item, noteText: htmlToText(item.noteHtml) })) : [];
+    if (Array.isArray(coursework.institutions) && coursework.institutions.length) {
+      return coursework.institutions.map((item) => ({ ...item, noteText: htmlToText(item.noteHtml) }));
+    }
+    if (Array.isArray(coursework.categories) && coursework.categories.length) {
+      return [
+        {
+          name: coursework.defaultSchoolName || '',
+          subtitle: coursework.panelSubtitle || '',
+          categories: coursework.categories,
+          noteText: htmlToText(coursework.noteHtml),
+        },
+      ];
+    }
+    return [];
   }
 
   function setFriendlySchools(items) {
@@ -921,6 +1228,9 @@
         }),
       noteHtml: item.noteText ? `<p>${String(item.noteText).split('\n').join('</p><p>')}</p>` : '',
     }));
+    if (coursework.institutions.length) {
+      delete coursework.categories;
+    }
     setTextarea('coursework-page-json-field', coursework);
   }
 
@@ -1016,9 +1326,27 @@
     })));
   }
 
+  function normalizeCertCompleted(c) {
+    if (typeof c === 'string') return { text: c, date: '', note: '' };
+    return {
+      text: c.text || c.title || '',
+      date: c.date || c.issued || c.earned || '',
+      note: c.note || '',
+    };
+  }
+
+  function normalizeCertProgress(c) {
+    if (typeof c === 'string') return { text: c, date: '', note: '' };
+    return {
+      text: c.text || c.title || '',
+      date: c.date || c.expected || '',
+      note: c.note || '',
+    };
+  }
+
   function getFriendlyCompletedCerts() {
     const certifications = parseFieldJson('certifications-json-field', {});
-    return Array.isArray(certifications.completed) ? certifications.completed : [];
+    return Array.isArray(certifications.completed) ? certifications.completed.map(normalizeCertCompleted) : [];
   }
 
   function setFriendlyCompletedCerts(items) {
@@ -1033,7 +1361,7 @@
 
   function getFriendlyProgressCerts() {
     const certifications = parseFieldJson('certifications-json-field', {});
-    return Array.isArray(certifications.inProgress) ? certifications.inProgress : [];
+    return Array.isArray(certifications.inProgress) ? certifications.inProgress.map(normalizeCertProgress) : [];
   }
 
   function setFriendlyProgressCerts(items) {
@@ -1092,6 +1420,11 @@
     setTextarea('home-summary-html-field', homeSummary ? `<p>${homeSummary.split('\n').join('</p><p>')}</p>` : '');
   }
 
+  function setFriendlyInput(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value ?? '';
+  }
+
   function loadFriendlyTextFields() {
     const homeHero = parseFieldJson('home-hero-json-field', {});
     const projectsPage = parseFieldJson('projects-page-json-field', {});
@@ -1101,45 +1434,51 @@
     const achievementsPage = parseFieldJson('achievements-page-json-field', {});
     const contact = parseFieldJson('contact-page-json-field', {});
     const coursework = parseFieldJson('coursework-page-json-field', {});
-    document.getElementById('friendly-home-eyebrow').value = homeHero.eyebrow || '';
-    document.getElementById('friendly-home-title').value = htmlToText(homeHero.titleHtml);
-    document.getElementById('friendly-home-lead').value = homeHero.lead || '';
-    document.getElementById('friendly-home-summary').value = htmlToText(document.getElementById('home-summary-html-field')?.value || '');
-    document.getElementById('friendly-projects-heading').value = projectsPage.heading || '';
-    document.getElementById('friendly-projects-intro').value = projectsPage.intro || '';
-    document.getElementById('friendly-events-heading').value = eventsPage.heading || '';
-    document.getElementById('friendly-events-intro').value = eventsPage.intro || '';
-    document.getElementById('friendly-events-competitions-heading').value = eventsPage.competitionsHeading || '';
-    document.getElementById('friendly-events-competitions-intro').value = eventsPage.competitionsIntro || '';
-    document.getElementById('friendly-timeline-heading').value = timelinePage.heading || '';
-    document.getElementById('friendly-timeline-intro').value = timelinePage.intro || '';
-    document.getElementById('friendly-experience-heading').value = experiencePage.heading || '';
-    document.getElementById('friendly-experience-intro').value = experiencePage.intro || '';
-    document.getElementById('friendly-experience-professional-heading').value = experiencePage.professionalHeading || '';
-    document.getElementById('friendly-experience-campus-heading').value = experiencePage.campusHeading || '';
-    document.getElementById('friendly-achievements-heading').value = achievementsPage.heading || '';
-    document.getElementById('friendly-contact-heading').value = contact.heading || '';
-    document.getElementById('friendly-contact-intro').value = htmlToText(contact.introHtml);
-    document.getElementById('friendly-coursework-heading').value = coursework.panelTitle || '';
-    document.getElementById('friendly-coursework-subtitle').value = coursework.panelSubtitle || '';
-    document.getElementById('friendly-coursework-note').value = htmlToText(coursework.noteHtml);
     const theme = parseFieldJson('theme-json-field', {});
-    document.getElementById('friendly-theme-accent').value = theme.accent || '';
-    document.getElementById('friendly-theme-accent2').value = theme.accent2 || '';
-    document.getElementById('friendly-theme-bg').value = theme.bg || '';
-    document.getElementById('friendly-theme-surface').value = theme.surface || '';
-    document.getElementById('friendly-theme-surface2').value = theme.surface2 || '';
-    document.getElementById('friendly-theme-text').value = theme.text || '';
-    document.getElementById('friendly-theme-muted').value = theme.muted || '';
-    document.getElementById('friendly-theme-border').value = theme.border || '';
-    document.getElementById('friendly-theme-timeline-role').value = theme.timelineRole || '';
-    document.getElementById('friendly-theme-timeline-project').value = theme.timelineProject || '';
-    document.getElementById('friendly-theme-timeline-event').value = theme.timelineEvent || '';
-    document.getElementById('friendly-theme-timeline-line').value = theme.timelineLine || '';
+
+    setFriendlyInput('friendly-home-eyebrow', homeHero.eyebrow || '');
+    setFriendlyInput('friendly-home-title', htmlToText(homeHero.titleHtml));
+    setFriendlyInput('friendly-home-lead', homeHero.lead || '');
+    setFriendlyInput('friendly-home-summary', htmlToText(document.getElementById('home-summary-html-field')?.value || ''));
+    setFriendlyInput('friendly-projects-heading', projectsPage.heading || '');
+    setFriendlyInput('friendly-projects-intro', projectsPage.intro || '');
+    setFriendlyInput('friendly-events-heading', eventsPage.heading || '');
+    setFriendlyInput('friendly-events-intro', eventsPage.intro || '');
+    setFriendlyInput('friendly-events-competitions-heading', eventsPage.competitionsHeading || '');
+    setFriendlyInput('friendly-events-competitions-intro', eventsPage.competitionsIntro || '');
+    setFriendlyInput('friendly-timeline-heading', timelinePage.heading || '');
+    setFriendlyInput('friendly-timeline-intro', timelinePage.intro || '');
+    setFriendlyInput('friendly-experience-heading', experiencePage.heading || '');
+    setFriendlyInput('friendly-experience-intro', experiencePage.intro || '');
+    setFriendlyInput('friendly-experience-professional-heading', experiencePage.professionalHeading || '');
+    setFriendlyInput('friendly-experience-campus-heading', experiencePage.campusHeading || '');
+    setFriendlyInput('friendly-achievements-heading', achievementsPage.heading || '');
+    setFriendlyInput('friendly-contact-heading', contact.heading || '');
+    setFriendlyInput('friendly-contact-intro', htmlToText(contact.introHtml || contact.intro || ''));
+    setFriendlyInput('friendly-coursework-heading', coursework.panelTitle || '');
+    setFriendlyInput('friendly-coursework-subtitle', coursework.panelSubtitle || '');
+    setFriendlyInput('friendly-coursework-note', htmlToText(coursework.noteHtml));
+
+    setFriendlyInput('friendly-theme-accent', theme.accent || '');
+    setFriendlyInput('friendly-theme-accent2', theme.accent2 || '');
+    setFriendlyInput('friendly-theme-bg', theme.bg || '');
+    setFriendlyInput('friendly-theme-surface', theme.surface || '');
+    setFriendlyInput('friendly-theme-surface2', theme.surface2 || '');
+    setFriendlyInput('friendly-theme-text', theme.text || '');
+    setFriendlyInput('friendly-theme-muted', theme.muted || '');
+    setFriendlyInput('friendly-theme-border', theme.border || '');
+    setFriendlyInput('friendly-theme-timeline-role', theme.timelineRole || '');
+    setFriendlyInput('friendly-theme-timeline-project', theme.timelineProject || '');
+    setFriendlyInput('friendly-theme-timeline-event', theme.timelineEvent || '');
+    setFriendlyInput('friendly-theme-timeline-line', theme.timelineLine || '');
   }
 
   function renderFriendlyEditors() {
-    loadFriendlyTextFields();
+    try {
+      loadFriendlyTextFields();
+    } catch (err) {
+      console.error('[admin-cms] loadFriendlyTextFields failed', err);
+    }
     renderFriendlyList('friendly-project-list', getFriendlyProjects(), projectEditorCard);
     renderFriendlyList('friendly-event-list', getFriendlyEvents(), eventEditorCard);
     renderFriendlyList('friendly-experience-list', getFriendlyExperience(), experienceEditorCard);
@@ -1164,6 +1503,7 @@
         slug: card.querySelector('[data-field="slug"]').value.trim(),
         dateLine: card.querySelector('[data-field="dateLine"]').value.trim(),
         category: card.querySelector('[data-field="category"]').value,
+        showHardwareGear: !!card.querySelector('[data-field="showHardwareGear"]')?.checked,
         summaryText: card.querySelector('[data-field="summary"]').value.trim(),
         detailText: card.querySelector('[data-field="details"]').value.trim(),
         chips: card.querySelector('[data-field="chips"]').value.trim(),
@@ -1273,6 +1613,9 @@
     });
   }
 
+  /** Expose immediately so “Save Changes” can sync friendly fields → hidden JSON before initAdminCmsExtensions finishes. */
+  window.syncFriendlyCmsEditors = syncFriendlyEditorsToJson;
+
   async function publishAllFromEditor() {
     if (!window.CmsApi.isAdminUser()) throw new Error('Admin sign-in required');
     await window.CmsApi.saveConfigSite(collectConfigPayloadFromEditor());
@@ -1283,25 +1626,66 @@
   }
 
   window.initAdminCmsExtensions = async function initAdminCmsExtensions() {
-    if (!window.CmsApi?.firebaseConfigured?.()) return;
+    ts('info', 'admin-cms', 'initAdminCmsExtensions: START');
+    const firebaseOk = !!(window.CmsApi && typeof window.CmsApi.firebaseConfigured === 'function' && window.CmsApi.firebaseConfigured());
+    ts('info', 'admin-cms', 'initAdminCmsExtensions: flags', {
+      firebaseOk,
+      firebaseApps:
+        typeof firebase !== 'undefined' && firebase.apps ? firebase.apps.length : '(n/a)',
+      cmsApi: typeof window.CmsApi !== 'undefined',
+      editorEmptyBeforeLoad: editorLooksEmpty(),
+    });
 
-    await fillFormFromFirebase();
-    if (editorLooksEmpty()) {
-      await loadStaticSiteIntoEditor();
-    } else {
-      await hydrateMissingEditorSectionsFromStatic();
+    try {
+      if (firebaseOk) {
+        await fillFormFromFirebase();
+        ts('debug', 'admin-cms', 'After Firebase fill: editorLooksEmpty=', editorLooksEmpty());
+      } else {
+        ts('warn', 'admin-cms', 'Skipping Firebase fill (firebaseConfigured() false — check js/firebase-config.js)');
+      }
+      if (!firebaseOk || editorLooksEmpty()) {
+        ts('info', 'admin-cms', 'Data path: full static import (loadStaticSiteIntoEditor)');
+        await loadStaticSiteIntoEditor();
+      } else {
+        ts('info', 'admin-cms', 'Data path: partial hydrate from static HTML (hydrateMissingEditorSectionsFromStatic)');
+        await hydrateMissingEditorSectionsFromStatic();
+      }
+    } catch (err) {
+      ts('error', 'admin-cms', 'Primary load/hydrate failed — trying full static import fallback', err);
+      console.error('[admin-cms] Failed to load or hydrate editor data', err);
+      try {
+        await loadStaticSiteIntoEditor();
+        ts('info', 'admin-cms', 'Fallback loadStaticSiteIntoEditor succeeded after error');
+      } catch (err2) {
+        ts('error', 'admin-cms', 'Fallback static import also failed', err2);
+        console.error('[admin-cms] Static site import failed', err2);
+      }
     }
+
+    window.refreshAdminFriendlyEditors = renderFriendlyEditors;
     const openAdminTab = bindAdminTabs();
-    renderFriendlyEditors();
+    ts('info', 'admin-cms', 'bindAdminTabs() executed; rendering friendly editors');
+    try {
+      renderFriendlyEditors();
+      ts('info', 'admin-cms', 'renderFriendlyEditors: OK', {
+        eyebrowLen: document.getElementById('friendly-home-eyebrow')?.value?.length ?? -1,
+        titleLen: document.getElementById('friendly-home-title')?.value?.length ?? -1,
+        leadLen: document.getElementById('friendly-home-lead')?.value?.length ?? -1,
+        resumeField: (document.getElementById('resume-url-field')?.value || '').slice(0, 80),
+        highlightCards: document.getElementById('friendly-highlight-list')?.children?.length ?? -1,
+        competencyCards: document.getElementById('friendly-competency-list')?.children?.length ?? -1,
+      });
+    } catch (err) {
+      ts('error', 'admin-cms', 'renderFriendlyEditors failed', err);
+      console.error('[admin-cms] renderFriendlyEditors failed', err);
+    }
 
     const msg = document.getElementById('admin-message');
     const loadBtn = document.getElementById('load-static-cms-btn');
-    const publishAllBtn = document.getElementById('publish-all-firestore-btn');
+    const publishAllBtn = document.getElementById('publish-all-rtdb-btn');
     const saveBtn = document.getElementById('save-blocks');
     const openLinksBtn = document.getElementById('open-links-tab-btn');
     const openMediaBtn = document.getElementById('open-media-tab-btn');
-
-    window.syncFriendlyCmsEditors = syncFriendlyEditorsToJson;
 
     if (openLinksBtn && !openLinksBtn.dataset.bound) {
       openLinksBtn.dataset.bound = '1';
@@ -1347,12 +1731,15 @@
     if (loadBtn && !loadBtn.dataset.bound) {
       loadBtn.dataset.bound = '1';
       loadBtn.addEventListener('click', async () => {
+        ts('info', 'admin-cms', 'User clicked "Load Current Site Into CMS"');
         msg.textContent = 'Loading current static site into the CMS editor…';
         try {
           await loadStaticSiteIntoEditor();
           renderFriendlyEditors();
           msg.textContent = 'Loaded current site content into the CMS editor. Review and publish when ready.';
+          ts('info', 'admin-cms', 'Manual static load completed', { editorLooksEmpty: editorLooksEmpty() });
         } catch (e) {
+          ts('error', 'admin-cms', 'Manual static load failed', e);
           msg.textContent = e.message || 'Static import failed.';
         }
         setTimeout(() => (msg.textContent = ''), 5000);
@@ -1362,7 +1749,6 @@
     if (publishAllBtn && !publishAllBtn.dataset.bound) {
       publishAllBtn.dataset.bound = '1';
       publishAllBtn.addEventListener('click', async () => {
-        syncFriendlyEditorsToJson();
         msg.textContent = 'Publishing config and all collections to Realtime Database…';
         try {
           await publishAllFromEditor();
@@ -1374,56 +1760,73 @@
       });
     }
 
-    document.getElementById('resume-upload-btn')?.addEventListener('click', async () => {
-      const input = document.getElementById('resume-file-input');
-      const file = input?.files?.[0];
-      if (!file) {
-        msg.textContent = 'Choose a PDF first.';
-        setTimeout(() => (msg.textContent = ''), 2500);
-        return;
-      }
-      try {
-        const storageRef = firebase.storage().ref(`site/resume/${file.name.replace(/\s+/g, '_')}`);
-        await storageRef.put(file);
-        const url = await storageRef.getDownloadURL();
-        const resumeEl = document.getElementById('resume-url-field');
-        if (resumeEl) resumeEl.value = url;
-        msg.textContent = 'Resume uploaded. URL filled — click Save Changes to sync config to Firebase.';
-        setTimeout(() => (msg.textContent = ''), 4000);
-      } catch (e) {
-        msg.textContent = e.message || 'Upload failed.';
-        setTimeout(() => (msg.textContent = ''), 4000);
-      }
-    });
+    const resumeUploadBtn = document.getElementById('resume-upload-btn');
+    if (resumeUploadBtn && resumeUploadBtn.dataset.bound !== '1') {
+      resumeUploadBtn.dataset.bound = '1';
+      resumeUploadBtn.addEventListener('click', async () => {
+        const input = document.getElementById('resume-file-input');
+        const file = input?.files?.[0];
+        if (!file) {
+          msg.textContent = 'Choose a PDF first.';
+          setTimeout(() => (msg.textContent = ''), 2500);
+          return;
+        }
+        if (typeof firebase === 'undefined' || typeof firebase.storage !== 'function') {
+          msg.textContent = 'Firebase SDK not loaded — cannot upload.';
+          setTimeout(() => (msg.textContent = ''), 4000);
+          return;
+        }
+        try {
+          window.CmsApi.initFirebase();
+          const storageRef = firebase.storage().ref(`site/resume/${file.name.replace(/\s+/g, '_')}`);
+          ts('info', 'admin-cms', 'Resume upload: starting Storage put', { name: file.name, size: file.size });
+          await storageRef.put(file);
+          const url = await storageRef.getDownloadURL();
+          const resumeEl = document.getElementById('resume-url-field');
+          if (resumeEl) resumeEl.value = url;
+          msg.textContent = 'Resume uploaded. URL filled — click Save Changes to sync config to Firebase.';
+          ts('info', 'admin-cms', 'Resume upload: success', { urlPreview: url.slice(0, 96) });
+          setTimeout(() => (msg.textContent = ''), 4000);
+        } catch (e) {
+          ts('error', 'admin-cms', 'Resume upload failed', e);
+          msg.textContent = e.message || 'Upload failed.';
+          setTimeout(() => (msg.textContent = ''), 4000);
+        }
+      });
+    }
 
-    document.getElementById('publish-collections-btn')?.addEventListener('click', async () => {
-      if (!window.CmsApi.isAdminUser()) return;
-      syncFriendlyEditorsToJson();
-      msg.textContent = 'Publishing collections…';
-      try {
-        await publishCollection(
-          'site_projects',
-          document.getElementById('bulk-projects-json')?.value,
-          'slug'
-        );
-        await publishCollection(
-          'site_events',
-          document.getElementById('bulk-events-json')?.value,
-          'slug'
-        );
-        await publishCollection('site_roles', document.getElementById('bulk-roles-json')?.value, 'slug');
-        await publishCollection(
-          'site_experience',
-          document.getElementById('bulk-experience-json')?.value,
-          'slug'
-        );
-        msg.textContent = 'Published projects, events, roles, and experience to Realtime Database.';
-        setTimeout(() => (msg.textContent = ''), 3500);
-      } catch (e) {
-        msg.textContent = e.message || 'Publish failed.';
-        setTimeout(() => (msg.textContent = ''), 5000);
-      }
-    });
+    const publishCollBtn = document.getElementById('publish-collections-btn');
+    if (publishCollBtn && publishCollBtn.dataset.bound !== '1') {
+      publishCollBtn.dataset.bound = '1';
+      publishCollBtn.addEventListener('click', async () => {
+        if (!window.CmsApi.isAdminUser()) return;
+        syncFriendlyEditorsToJson();
+        msg.textContent = 'Publishing collections…';
+        try {
+          await publishCollection(
+            'site_projects',
+            document.getElementById('bulk-projects-json')?.value,
+            'slug'
+          );
+          await publishCollection(
+            'site_events',
+            document.getElementById('bulk-events-json')?.value,
+            'slug'
+          );
+          await publishCollection('site_roles', document.getElementById('bulk-roles-json')?.value, 'slug');
+          await publishCollection(
+            'site_experience',
+            document.getElementById('bulk-experience-json')?.value,
+            'slug'
+          );
+          msg.textContent = 'Published projects, events, roles, and experience to Realtime Database.';
+          setTimeout(() => (msg.textContent = ''), 3500);
+        } catch (e) {
+          msg.textContent = e.message || 'Publish failed.';
+          setTimeout(() => (msg.textContent = ''), 5000);
+        }
+      });
+    }
 
     const help = document.getElementById('cms-json-help');
     if (help) {
@@ -1437,5 +1840,7 @@
         <p class="subtle"><strong>Contact / collaboration:</strong> use <code>contactPage.actions</code> and <code>contactPage.cards</code> to control links, emails, profile URLs, and contact methods.</p>
       `;
     }
+
+    ts('info', 'admin-cms', 'initAdminCmsExtensions: FINISHED (tabs, friendly buttons, save/load/publish handlers attached)');
   };
 })();

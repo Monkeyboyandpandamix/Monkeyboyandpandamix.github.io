@@ -138,6 +138,48 @@ function requireAuth() {
   return true;
 }
 
+/**
+ * Run Page Editor init after js/admin-cms.js defines initAdminCmsExtensions.
+ * queueMicrotask runs before subsequent deferred scripts — do not use it here.
+ * admin.html loads admin-cms.js before portal.js; otherwise we retry a few macrotasks.
+ */
+function scheduleAdminCmsInit() {
+  window.AdminTroubleshootLog?.info(
+    'portal',
+    'scheduleAdminCmsInit: queued (macrotask) — initAdminCmsExtensions must exist after js/admin-cms.js',
+    {
+      initReady: typeof window.initAdminCmsExtensions === 'function',
+      protocol: typeof location !== 'undefined' ? location.protocol : '?',
+    }
+  );
+  let attempts = 0;
+  const run = () => {
+    if (typeof window.initAdminCmsExtensions === 'function') {
+      window.AdminTroubleshootLog?.info('portal', `scheduleAdminCmsInit: invoking initAdminCmsExtensions (attempt ${attempts + 1})`);
+      const p = window.initAdminCmsExtensions();
+      if (p && typeof p.catch === 'function') {
+        p.catch((e) => {
+          console.error('[admin-cms]', e);
+          window.AdminTroubleshootLog?.error('portal', 'initAdminCmsExtensions promise rejected', e);
+        });
+      }
+      return;
+    }
+    attempts += 1;
+    window.AdminTroubleshootLog?.warn('portal', `initAdminCmsExtensions not defined yet — retry ${attempts}/80`, {
+      hint: 'Script order should be: admin-cms.js before portal.js',
+    });
+    if (attempts > 80) {
+      const msg = 'initAdminCmsExtensions never appeared — load js/admin-cms.js before portal.js on admin pages.';
+      console.error('[portal]', msg);
+      window.AdminTroubleshootLog?.error('portal', msg, { attempts });
+      return;
+    }
+    setTimeout(run, 0);
+  };
+  setTimeout(run, 0);
+}
+
 function toYoutubeEmbed(url) {
   const u = normalizeUrl(url);
   if (!u) return '';
@@ -606,9 +648,18 @@ function initAdminPage() {
   const root = document.getElementById('admin-root');
   if (!root) return;
 
+  window.AdminTroubleshootLog?.info('portal', 'initAdminPage: starting', {
+    firebasePortalEnabled: firebasePortalEnabled(),
+    sessionAuthed: sessionStorage.getItem(PORTAL_KEYS.authed) === '1',
+  });
+
   const mountAdminEditors = () => {
+    window.AdminTroubleshootLog?.debug('portal', 'mountAdminEditors called', {
+      alreadyInitialized: root.dataset.adminInitialized === '1',
+    });
     if (root.dataset.adminInitialized === '1') return;
     root.dataset.adminInitialized = '1';
+    window.AdminTroubleshootLog?.info('portal', 'mountAdminEditors: wiring link/media/settings UI');
 
   const linkList = document.getElementById('link-editor-list');
   const mediaList = document.getElementById('media-editor-list');
@@ -649,6 +700,9 @@ function initAdminPage() {
   });
 
   saveBtn?.addEventListener('click', async () => {
+    if (typeof window.syncFriendlyCmsEditors === 'function') {
+      window.syncFriendlyCmsEditors();
+    }
     const links = collectLinks();
     const media = collectMedia();
     const settings = collectSettings();
@@ -705,24 +759,40 @@ function initAdminPage() {
   };
 
   if (firebasePortalEnabled()) {
+    window.AdminTroubleshootLog?.info('portal', 'Using Firebase auth path — waiting for onAuthStateChanged');
     window.CmsApi.initFirebase();
     if (!window.__adminAuthBound) {
       window.__adminAuthBound = true;
       window.CmsApi.watchAuth((user) => {
-        if (!user || !window.CmsApi.isAdminUser()) {
-          window.location.href = './login.html';
+        const email = user?.email || firebase.auth()?.currentUser?.email || '';
+        window.AdminTroubleshootLog?.info('portal', 'watchAuth callback', {
+          callbackUser: !!user,
+          currentUser: !!firebase.auth()?.currentUser,
+          emailMasked: window.AdminTroubleshootLog?.maskEmail ? window.AdminTroubleshootLog.maskEmail(email) : '(mask fn missing)',
+          isAdminUser: window.CmsApi.isAdminUser(),
+          uid: user?.uid || firebase.auth()?.currentUser?.uid || null,
+        });
+        /*
+         * Do NOT gate on `user` from the callback alone. Firebase can invoke this with user=null
+         * while firebase.auth().currentUser is already the admin — `!user` alone would wrongly redirect.
+         * isAdminUser() reads currentUser from Auth, which is authoritative.
+         */
+        if (window.CmsApi.isAdminUser()) {
+          mountAdminEditors();
+          scheduleAdminCmsInit();
           return;
         }
-        mountAdminEditors();
-        if (typeof window.initAdminCmsExtensions === 'function') window.initAdminCmsExtensions();
+        window.AdminTroubleshootLog?.warn('portal', 'Redirecting to login — not signed in as admin');
+        window.location.href = './login.html';
       });
     }
     return;
   }
 
+  window.AdminTroubleshootLog?.info('portal', 'Using session/password auth path (no Firebase client flag)');
   if (!requireAuth()) return;
   mountAdminEditors();
-  if (typeof window.initAdminCmsExtensions === 'function') window.initAdminCmsExtensions();
+  scheduleAdminCmsInit();
 }
 
 function refreshPortalPublicUi() {

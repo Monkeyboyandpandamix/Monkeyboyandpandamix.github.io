@@ -171,7 +171,17 @@
 
   function buildProjectCard(p) {
     const slug = escapeAttr((p.slug || '').replace(/^#/, ''));
-    const title = escapeHtml(p.title || 'Untitled');
+    const cat = (p.category || 'software').toLowerCase();
+    const rawTitleIn = String(p.title || '').trim() || 'Untitled';
+    const titleHasGearChar = /⚙/.test(rawTitleIn);
+    let titlePlain = rawTitleIn.replace(/^\s*⚙\s*/, '').trim() || 'Untitled';
+    const showGear =
+      cat === 'hardware' ||
+      cat === 'hybrid' ||
+      p.showHardwareGear === true ||
+      titleHasGearChar;
+    const gearHtml = showGear ? '<span class="hw-symbol" aria-label="hardware">⚙</span> ' : '';
+    const title = `${gearHtml}${escapeHtml(titlePlain)}`;
     const meta = p.meta ? `<p class="meta">${escapeHtml(p.meta)}</p>` : '';
     const dateLine = p.dateLine ? `<p class="date">${escapeHtml(p.dateLine)}</p>` : '';
     const purpose = p.summaryHtml
@@ -179,7 +189,6 @@
       : '';
     const detail = p.detailHtml ? `<details><summary>Expand details</summary>${p.detailHtml}</details>` : '';
     const chipsArr = Array.isArray(p.chips) ? p.chips : [];
-    const cat = (p.category || 'software').toLowerCase();
     const chips = chipsArr
       .map((t) => {
         const label = escapeHtml(t);
@@ -342,7 +351,7 @@
       cfg.actionsHtml ||
       `<div class="actions">
         <a class="btn primary" href="./experience.html">View Experience & Projects</a>
-        <a class="btn ghost resume-dynamic" data-resume-link href="./resume.pdf">Download Resume</a>
+        <a class="btn ghost resume-dynamic" data-resume-link href="./resume.pdf" download>Download Resume</a>
       </div>`;
     mount.innerHTML = `<div class="cms-home-hero-inner">${eyebrow}${titleHtml}${lead}${actions}</div>`;
     mount.hidden = false;
@@ -706,17 +715,6 @@
   async function run() {
     if (!window.CmsApi || !window.CmsApi.firebaseConfigured()) return;
     window.CmsApi.initFirebase();
-    if (typeof window.CmsApi.watchAllCmsData === 'function') {
-      window.CmsApi.watchAllCmsData((data) => {
-        try {
-          renderData(data);
-        } catch (err) {
-          console.warn('[CMS] render failed', err);
-        }
-      });
-      return;
-    }
-
     let data;
     try {
       data = await window.CmsApi.loadAllCmsData();
@@ -724,12 +722,16 @@
       console.warn('[CMS] load failed', err);
       return;
     }
-    renderData(data);
+    try {
+      renderData(data);
+    } catch (err) {
+      console.warn('[CMS] render failed', err);
+    }
   }
 
   window.MamCms = window.MamCms || {};
   window.MamCms.clearCmsThemeInlineVars = clearCmsThemeInlineVars;
-  window.MamCms.reapplyFirestoreTheme = function reapplyFirestoreTheme() {
+  window.MamCms.reapplyCmsTheme = function reapplyCmsTheme() {
     try {
       const mode = localStorage.getItem('mam_a11y_color');
       if (mode && mode !== 'default') return;
@@ -740,7 +742,6 @@
     const cfg = window.__cmsData?.config;
     if (cfg?.theme && typeof cfg.theme === 'object') applyTheme(cfg.theme);
   };
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', run);
   } else {
