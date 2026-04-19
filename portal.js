@@ -733,14 +733,13 @@ function initAdminPage() {
         // experience) so admin edits in those tabs go live without a separate
         // "Publish All" step.
         const collections = [
-          ['bulk-projects-json', 'site_projects', 'projects'],
-          ['bulk-events-json', 'site_events', 'events'],
-          ['bulk-roles-json', 'site_roles', 'timeline'],
-          ['bulk-experience-json', 'site_experience', 'experience'],
+          ['bulk-projects-json', 'site_projects'],
+          ['bulk-events-json', 'site_events'],
+          ['bulk-roles-json', 'site_roles'],
+          ['bulk-experience-json', 'site_experience'],
         ];
         let publishedCount = 0;
-        const activeFlags = {};
-        for (const [fieldId, collection, flag] of collections) {
+        for (const [fieldId, collection] of collections) {
           const raw = document.getElementById(fieldId)?.value?.trim();
           if (!raw) continue;
           try {
@@ -748,19 +747,16 @@ function initAdminPage() {
             if (!Array.isArray(arr)) continue;
             await window.CmsApi.replaceCollection(collection, arr, 'slug');
             publishedCount += 1;
-            if (flag) activeFlags[flag] = true;
           } catch (e) {
             console.warn('[Admin] Skipped publishing', collection, '— invalid JSON:', e.message);
           }
         }
-        // Persist which collections are now CMS-authoritative so cms-render
-        // trusts them fully (otherwise it falls back to the safe-swap guard).
-        if (Object.keys(activeFlags).length) {
-          try {
-            await window.CmsApi.saveConfigSite({ cmsCollectionsActive: activeFlags });
-          } catch (e) {
-            console.warn('[Admin] Failed to set cmsCollectionsActive flags:', e.message);
-          }
+        // Clear any legacy "trust CMS unconditionally" flag from older saves
+        // so the strict safe-swap guard always applies.
+        try {
+          await window.CmsApi.saveConfigSite({ cmsCollectionsActive: null });
+        } catch (_) {
+          /* non-fatal */
         }
         cloudNote = publishedCount
           ? ` Synced to Firebase (${publishedCount} collection${publishedCount === 1 ? '' : 's'} published).`

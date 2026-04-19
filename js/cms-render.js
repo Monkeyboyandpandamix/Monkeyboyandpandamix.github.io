@@ -815,21 +815,15 @@
     const contactEmail = (cfg.contactPage && cfg.contactPage.email) || cfg.contactEmail;
     if (contactEmail) applyContactEmail(contactEmail);
 
-    // Projects, Events, Timeline are CMS-driven, but only AFTER the admin has
-    // explicitly clicked Save Changes (which publishes the collections and
-    // sets cfg.cmsCollectionsActive[<key>] = true). Until then, we use the
-    // safe-swap guard so stale or partial Firebase data can't wipe a
-    // richer static page (the "load-then-break" regression).
-    const activeFlags = (cfg.cmsCollectionsActive && typeof cfg.cmsCollectionsActive === 'object')
-      ? cfg.cmsCollectionsActive
-      : {};
+    // Strict guard: only let the CMS replace the static fallback when the CMS
+    // has at LEAST as many items as the static page. This is the only way to
+    // reliably prevent the "load-then-break" regression where stale or partial
+    // Firebase data wipes a richer static page after a brief flash.
     function canTrustCmsList(staticCount, cmsCount, key) {
       if (!cmsCount) return false;
-      if (activeFlags[key] === true) return true; // admin explicitly published
-      // Conservative pre-publish guard: only swap if CMS matches/exceeds static.
       const ok = cmsCount >= staticCount;
       if (!ok) {
-        console.info(`[CMS] Keeping static ${key} (CMS has ${cmsCount}, static has ${staticCount}; click Save Changes in admin to make CMS authoritative).`);
+        console.info(`[CMS] Keeping static ${key} (CMS has ${cmsCount}, static has ${staticCount}). To make CMS authoritative: in Admin click "Load Static Site Into Editor" then "Save Changes".`);
       }
       return ok;
     }
@@ -839,7 +833,7 @@
     const fbP = document.getElementById('projects-static-fallback');
     if (mountP && fbP && projects.length) {
       const staticCount = fbP.querySelectorAll('article').length;
-      if (canTrustCmsList(staticCount, projects.length, 'projects')) { // key matches activeFlags
+      if (canTrustCmsList(staticCount, projects.length, 'projects')) {
         const projHtml = projects
           .sort((a, b) => {
             const bo = Number(b.orderIndex);
