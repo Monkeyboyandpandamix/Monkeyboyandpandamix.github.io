@@ -114,13 +114,16 @@ function initExpandableBlocks() {
   const makeExpandable = (container, keepCount, kind) => {
     if (!container) return;
     if (container.dataset.expandReady === '1') {
-      const hasButton = !!container.querySelector(':scope > .expand-arrow-btn, :scope > .expand-title-row .expand-arrow-btn');
+      const hasButton = !!container.querySelector(':scope > .expand-arrow-btn, :scope > .expand-title-row > .expand-arrow-btn');
       const hasContent = !!container.querySelector(':scope > .card-expand-content');
       if (hasButton && hasContent) return;
       container.dataset.expandReady = '0';
       container.classList.remove('card-expandable', 'section-expandable', 'is-open');
       container.querySelectorAll(':scope > .expand-arrow-btn, :scope > .card-expand-content').forEach((node) => node.remove());
-      container.querySelectorAll(':scope > .expand-title-row').forEach((node) => node.classList.remove('expand-title-row'));
+      container.querySelectorAll(':scope > .expand-title-row').forEach((node) => {
+        node.querySelectorAll(':scope > .expand-arrow-btn').forEach((btn) => btn.remove());
+        node.classList.remove('expand-title-row');
+      });
     }
     const kids = [...container.children];
     if (kids.length <= keepCount) return;
@@ -155,13 +158,21 @@ function initExpandableBlocks() {
     btn.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      toggle(container, content, btn);
+      const liveContent = container.querySelector(':scope > .card-expand-content');
+      const liveBtn = container.querySelector(':scope > .expand-arrow-btn, :scope > .expand-title-row > .expand-arrow-btn');
+      toggle(container, liveContent || content, liveBtn || btn);
     });
 
-    container.addEventListener('click', (event) => {
-      if (isInteractiveTarget(event.target)) return;
-      toggle(container, content, btn);
-    });
+    if (container.dataset.expandClickBound !== '1') {
+      container.dataset.expandClickBound = '1';
+      container.addEventListener('click', (event) => {
+        if (isInteractiveTarget(event.target)) return;
+        const liveContent = container.querySelector(':scope > .card-expand-content');
+        const liveBtn = container.querySelector(':scope > .expand-arrow-btn, :scope > .expand-title-row > .expand-arrow-btn');
+        if (!liveContent || !liveBtn) return;
+        toggle(container, liveContent, liveBtn);
+      });
+    }
   };
 
   if (currentFile === 'index.html') {

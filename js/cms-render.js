@@ -336,8 +336,16 @@
     const el = document.getElementById('home-summary');
     if (!el || !html || !html.trim()) return;
     const h2 = el.querySelector('h2.page-title');
-    const titleHtml = h2 ? h2.outerHTML : '';
+    let titleHtml = '';
+    if (h2) {
+      const clone = h2.cloneNode(true);
+      clone.classList.remove('expand-title-row');
+      clone.querySelectorAll('.expand-arrow-btn').forEach((btn) => btn.remove());
+      titleHtml = clone.outerHTML;
+    }
     el.innerHTML = `${titleHtml}<div class="cms-home-summary">${html}</div>`;
+    el.dataset.expandReady = '0';
+    el.classList.remove('section-expandable', 'card-expandable', 'is-open');
   }
 
   function applyHomeHero(cfg) {
