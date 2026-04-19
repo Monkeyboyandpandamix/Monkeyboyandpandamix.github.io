@@ -97,7 +97,6 @@
   function buildPortalPayload(cfg) {
     if (!cfg || typeof cfg !== 'object') return null;
     return {
-      blocks: Array.isArray(cfg.achievementsBlocks) ? cfg.achievementsBlocks : undefined,
       verifyLinks: Array.isArray(cfg.verifyLinks) ? cfg.verifyLinks : undefined,
       media: Array.isArray(cfg.media) ? cfg.media : undefined,
       settings: cfg.settings && typeof cfg.settings === 'object' ? cfg.settings : undefined,

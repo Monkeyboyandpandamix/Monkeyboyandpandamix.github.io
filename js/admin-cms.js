@@ -441,7 +441,6 @@
 
   function collectConfigPayloadFromEditor() {
     const payload = {
-      achievementsBlocks: typeof getBlocks === 'function' ? getBlocks() : [],
       verifyLinks: typeof getVerifyLinks === 'function' ? getVerifyLinks() : [],
       media: typeof getMediaItems === 'function' ? getMediaItems() : [],
       settings: typeof getSettings === 'function' ? getSettings() : {},

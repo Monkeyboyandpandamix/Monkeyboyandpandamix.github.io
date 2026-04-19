@@ -59,6 +59,6 @@ Your site URL format:
 - `courseworkPage`: Academic Coursework title/subtitle, schools, course groups, and Coursework Note.
 - `site_projects` plus `projectsPage`: Key Projects & Technical Work heading/intro, per-project tags via `chips`, category filtering via `category`, media, actions, and timeline auto-linking.
 - `site_events` plus `eventsPage`: Professional Events & Networking heading/intro and Capture The Flags & Hackathons Attended heading/intro.
-- `achievementCards`, `achievementsPage`, `achievementsBlocks`: Achievements & Recognition and Future / Portal-Managed Blocks.
+- `achievementCards`, `achievementsPage`: Achievements & Recognition.
 - `contactPage`: Interested in collaborating, links, contact methods, and profile cards.
 - `theme`: site colors and page theme variables. Accessibility color overrides still take precedence in the browser session.

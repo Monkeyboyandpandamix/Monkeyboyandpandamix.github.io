@@ -30,12 +30,8 @@
       <h1 class="page-title">Admin Portal</h1>
       <p class="subtle">Manage blocks, verification links, media (images/videos/YouTube/links), page themes, timeline filters, and analytics.</p>
       <div class="actions">
-        <label>Insert new block at:
-          <select id="add-block-position"><option value="0">Position 1</option></select>
-        </label>
         <button id="load-static-cms-btn" class="btn ghost" type="button">Load Current Site Into CMS</button>
         <button id="publish-all-firestore-btn" class="btn ghost" type="button">Publish All To Realtime DB</button>
-        <button id="add-block" class="btn ghost" type="button">Add Future Achievement Block</button>
         <button id="add-link" class="btn ghost" type="button">Add Verification Link</button>
         <button id="add-media" class="btn ghost" type="button">Add Media</button>
         <button id="save-blocks" class="btn primary" type="button">Save Changes</button>
@@ -151,7 +147,7 @@
       <label class="full">achievementCards [{ title, meta, body or bodyHtml }]
         <textarea id="achievement-cards-json-field" class="code-json" rows="8" placeholder="[]"></textarea>
       </label>
-      <p class="subtle">Covers: <strong>Experience</strong>, <strong>Academic Coursework</strong>, <strong>Coursework Note</strong>, <strong>schools</strong>, <strong>Key Projects & Technical Work</strong>, <strong>Professional Events & Networking</strong>, <strong>Capture The Flags & Hackathons Attended</strong>, <strong>Achievements & Recognition</strong>, <strong>Future / Portal-Managed Blocks</strong>, and <strong>Interested in collaborating?</strong></p>
+      <p class="subtle">Covers: <strong>Experience</strong>, <strong>Academic Coursework</strong>, <strong>Coursework Note</strong>, <strong>schools</strong>, <strong>Key Projects & Technical Work</strong>, <strong>Professional Events & Networking</strong>, <strong>Capture The Flags & Hackathons Attended</strong>, <strong>Achievements & Recognition</strong>, and <strong>Interested in collaborating?</strong></p>
     </section>
 
     <section class="section panel reveal">
@@ -212,12 +208,6 @@
       <article class="card section"><h3>Page Views</h3><ul id="metric-pages"></ul></article>
       <div class="actions"><button id="reset-metrics-btn" class="btn ghost" type="button">Reset Analytics Counter</button></div>
     </section>
-
-    <section class="section panel reveal">
-      <h2 class="page-title">Editable Achievement Blocks</h2>
-      <div id="block-editor-list" class="stack"></div>
-    </section>
-
     <section class="section panel reveal">
       <h2 class="page-title">Verification Links (Projects/Hackathons/Events)</h2>
       <p class="subtle">Supports external URLs and proof links that auto-render on matching cards/timeline items.</p>

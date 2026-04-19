@@ -8,16 +8,7 @@ const PORTAL_KEYS = {
   localMetrics: 'site_metrics_local_v1',
 };
 
-const DEFAULT_BLOCKS = [
-  {
-    title: 'Future Achievement Slot',
-    subtitle: 'Upcoming Competition / Award',
-    date: 'Future',
-    description: 'Use the portal to replace this with your next milestone, award, or certification update.',
-    tags: ['Future', 'Editable', 'Portal Managed'],
-    status: 'Planned',
-  },
-];
+const DEFAULT_BLOCKS = [];
 
 const DEFAULT_VERIFY_LINKS = [
   { target: 'AURA (HackUNCP26)', page: 'projects.html', label: 'Devpost (Add URL)', url: '#', category: 'Hackathon' },
@@ -83,7 +74,7 @@ function firebasePortalEnabled() {
 
 function getBlocks() {
   const cached = window.__portalData?.blocks;
-  if (Array.isArray(cached) && cached.length) return cached;
+  if (Array.isArray(cached)) return cached;
   return safeParse(localStorage.getItem(PORTAL_KEYS.blocks), DEFAULT_BLOCKS);
 }
 function setBlocks(v) {
@@ -713,7 +704,7 @@ function initAdminPage() {
     const media = collectMedia();
     const settings = collectSettings();
 
-    setBlocks(blocks.length ? blocks : DEFAULT_BLOCKS);
+    setBlocks(blocks);
     setVerifyLinks(links.length ? links : DEFAULT_VERIFY_LINKS);
     setMediaItems(media);
     setSettings(settings);
@@ -726,7 +717,6 @@ function initAdminPage() {
         const homeEl = document.getElementById('home-summary-html-field');
         const homeSummaryHtml = homeEl?.value?.trim();
         const payload = {
-          achievementsBlocks: getBlocks(),
           verifyLinks: getVerifyLinks(),
           media: getMediaItems(),
           settings: getSettings(),
@@ -743,7 +733,7 @@ function initAdminPage() {
       }
     }
 
-    msg.textContent = `Saved locally.${cloudNote} Blocks: ${blocks.length || 1}, Links: ${links.length || DEFAULT_VERIFY_LINKS.length}, Media: ${media.length}`;
+    msg.textContent = `Saved locally.${cloudNote} Links: ${links.length || DEFAULT_VERIFY_LINKS.length}, Media: ${media.length}`;
     setTimeout(() => (msg.textContent = ''), 2800);
   });
 
