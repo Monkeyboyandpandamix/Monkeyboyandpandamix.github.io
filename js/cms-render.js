@@ -13,6 +13,37 @@
     return escapeHtml(s).replace(/"/g, '&quot;');
   }
 
+  /**
+   * Only swap a dynamic CMS mount over a static fallback when the new content
+   * is at least as rich (article count + visible text length) as the static
+   * version. Prevents the "loads correctly then breaks" regression where a
+   * sparse CMS payload visibly downgrades the page after Firebase data lands.
+   */
+  function safeSwap(staticEl, dynamicEl, html, opts) {
+    if (!staticEl || !dynamicEl) return false;
+    const o = opts || {};
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    const dynArticles = tmp.querySelectorAll('article').length;
+    const dynText = (tmp.textContent || '').replace(/\s+/g, ' ').trim().length;
+    const stArticles = staticEl.querySelectorAll('article').length;
+    const stText = (staticEl.textContent || '').replace(/\s+/g, ' ').trim().length;
+    // If the static fallback has articles, require the dynamic to have at least as many.
+    if (stArticles > 0 && dynArticles < stArticles) {
+      console.info('[CMS] Skipped CMS swap (static richer):', staticEl.id || staticEl.className, '— static articles', stArticles, 'dynamic', dynArticles);
+      return false;
+    }
+    // For non-article sections (contact intro etc.), require dynamic text to be at least 50% of static.
+    if (stArticles === 0 && stText > 0 && dynText < stText * 0.5) {
+      console.info('[CMS] Skipped CMS swap (static text richer):', staticEl.id || staticEl.className, '— static len', stText, 'dynamic len', dynText);
+      return false;
+    }
+    dynamicEl.innerHTML = html;
+    dynamicEl.hidden = false;
+    staticEl.hidden = true;
+    return true;
+  }
+
   function stripHtml(html) {
     if (!html) return '';
     const d = document.createElement('div');
@@ -477,9 +508,7 @@
       html += `<section class="section reveal"><h2 class="page-title">Additional Campus Roles</h2><div class="stack">${campus.map(buildExperienceArticle).join('')}</div></section>`;
     }
     if (!html) return;
-    mount.innerHTML = html;
-    mount.hidden = false;
-    fb.hidden = true;
+    safeSwap(fb, mount, html);
   }
 
   function formatCourseLine(line) {
@@ -560,16 +589,16 @@
 
     const globalNote = hasGlobalNote ? `<section class="section panel reveal">${cp.noteHtml}</section>` : '';
 
-    mount.innerHTML = `${header}${body}${globalNote}`;
-    mount.hidden = false;
-    fb.hidden = true;
+    safeSwap(fb, mount, `${header}${body}${globalNote}`);
   }
 
   /** Featured Articles (news/press) — rendered on achievements.html. */
   function applyFeaturedArticles(items) {
     const mount = document.getElementById('featured-articles-dynamic');
     const fb = document.getElementById('featured-articles-static');
-    if (!mount || !Array.isArray(items) || !items.length) return;
+    if (!mount || !fb || !Array.isArray(items) || !items.length) return;
+    // Honor the same swap-safety rule used elsewhere
+    if (items.length < (fb.querySelectorAll('article').length || 0)) return;
     const html = items
       .map((a) => {
         const title = escapeHtml(a.title || a.headline || 'Featured Article');
@@ -613,14 +642,16 @@
       .join('');
     const actionsHtml = actions ? `<div class="actions">${actions}</div>` : '';
     const cardsHtml = cards ? `<section class="section grid-2 reveal">${cards}</section>` : '';
-    mount.innerHTML = `<section class="section panel reveal"><h1 class="page-title">${heading}</h1>${intro}${actionsHtml}</section>${cardsHtml}`;
-    mount.hidden = false;
-    fb.hidden = true;
+    safeSwap(fb, mount, `<section class="section panel reveal"><h1 class="page-title">${heading}</h1>${intro}${actionsHtml}</section>${cardsHtml}`);
   }
 
   function applyAchievementGrid(cards) {
     const mount = document.getElementById('achievements-static-grid');
     if (!mount || !Array.isArray(cards) || !cards.length) return;
+    // The achievement grid is its own static fallback — only swap if CMS produces
+    // at least as many cards as currently rendered.
+    const staticCount = mount.querySelectorAll('article').length;
+    if (cards.length < staticCount) return;
     mount.innerHTML = cards
       .map((c) => {
         const body = c.bodyHtml || `<p>${escapeHtml(c.body || c.description || '')}</p>`;
@@ -723,7 +754,7 @@
     const mountP = document.getElementById('projects-dynamic-mount');
     const fbP = document.getElementById('projects-static-fallback');
     if (mountP && fbP && projects.length) {
-      mountP.innerHTML = projects
+      const projHtml = projects
         .sort((a, b) => {
           const bo = Number(b.orderIndex);
           const ao = Number(a.orderIndex);
@@ -732,8 +763,7 @@
         })
         .map(buildProjectCard)
         .join('');
-      mountP.hidden = false;
-      fbP.hidden = true;
+      safeSwap(fbP, mountP, projHtml);
     }
 
     const events = data.events || [];
@@ -750,18 +780,15 @@
       if (comp.length) {
         html += `<section class="section panel reveal"><h2 class="page-title">${escapeHtml(eventsPageCfg.competitionsHeading || 'Capture The Flags & Hackathons Attended')}</h2><p class="subtle">${escapeHtml(eventsPageCfg.competitionsIntro || 'Competition and challenge events focused on practical cybersecurity and collaborative problem solving.')}</p></section><section class="section stack reveal">${comp.map(buildEventCard).join('')}</section>`;
       }
-      mountE.innerHTML = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
-      mountE.hidden = false;
-      fbE.hidden = true;
+      const eventsHtml = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
+      safeSwap(fbE, mountE, eventsHtml);
     }
 
     const timelineRows = mergeTimelineRows(data, settings);
     const mountT = document.getElementById('timeline-dynamic-mount');
     const fbT = document.getElementById('timeline-static-fallback');
     if (mountT && fbT && timelineRows.length) {
-      mountT.innerHTML = timelineRows.map(buildTimelineArticle).join('');
-      mountT.hidden = false;
-      fbT.hidden = true;
+      safeSwap(fbT, mountT, timelineRows.map(buildTimelineArticle).join(''));
     }
 
     if (payload && payload.resumeUrl) applyResumeLinks(payload.resumeUrl);
