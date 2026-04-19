@@ -778,6 +778,35 @@
     setTextarea('bulk-events-json', buildEventsSeed(docs['events.html'], timelineIndex));
     setTextarea('bulk-roles-json', buildRolesSeed(docs['timeline.html']));
     setTextarea('bulk-experience-json', buildExperienceSeed(docs['experience.html']));
+    // Seed Featured Articles from achievements.html so first-time bootstrap
+    // includes the press section instead of leaving it blank.
+    if (typeof setTextarea === 'function') {
+      try {
+        const ach = docs['achievements.html'];
+        const seedArticles = [];
+        if (ach && ach.querySelector) {
+          ach.querySelectorAll('#featured-articles-static article.card').forEach((art) => {
+            const titleEl = art.querySelector('h3');
+            const dateEl = art.querySelector('.date');
+            const linkEl = art.querySelector('a[href]');
+            const paragraphs = Array.from(art.querySelectorAll(':scope > p'))
+              .filter((p) => !p.classList.contains('date') && !p.classList.contains('subtle') && !p.querySelector('a.btn'));
+            seedArticles.push({
+              title: text(titleEl),
+              date: text(dateEl),
+              summaryHtml: paragraphs.map((p) => p.outerHTML).join(''),
+              url: linkEl ? linkEl.getAttribute('href') : '',
+              linkLabel: linkEl ? text(linkEl) : 'Read Full Article',
+            });
+          });
+        }
+        if (seedArticles.length) {
+          setTextarea('featured-articles-json-field', seedArticles);
+        }
+      } catch (e) {
+        console.warn('[admin-cms] Featured articles seed failed:', e.message);
+      }
+    }
     ts('info', 'admin-cms', 'loadStaticSiteIntoEditor: textareas populated', {
       editorLooksEmpty: editorLooksEmpty(),
     });
