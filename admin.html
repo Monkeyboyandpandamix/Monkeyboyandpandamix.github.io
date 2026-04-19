@@ -33,6 +33,8 @@
         <label>Insert new block at:
           <select id="add-block-position"><option value="0">Position 1</option></select>
         </label>
+        <button id="load-static-cms-btn" class="btn ghost" type="button">Load Current Site Into CMS</button>
+        <button id="publish-all-firestore-btn" class="btn ghost" type="button">Publish All To Firestore</button>
         <button id="add-block" class="btn ghost" type="button">Add Future Achievement Block</button>
         <button id="add-link" class="btn ghost" type="button">Add Verification Link</button>
         <button id="add-media" class="btn ghost" type="button">Add Media</button>
@@ -40,6 +42,77 @@
         <button id="logout-btn" class="btn ghost" type="button">Logout</button>
       </div>
       <p id="admin-message" class="subtle"></p>
+      <p class="subtle section">
+        <strong>Security:</strong> Firebase API keys in the browser are normal; your data is protected by Firestore and Storage rules (admin-only writes). Never share your Google account or reuse passwords. Deploy <code>firestore.rules</code> and <code>storage.rules</code> from this repo with the Firebase CLI.
+      </p>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Site theme & page content (JSON → Save Changes)</h2>
+      <p class="subtle">Valid JSON only. Leave blank to skip. Use <strong>Save Changes</strong> to merge into Firestore <code>config/site</code>. Keys: theme (CSS colors), homeHero, quickHighlights[], certifications{}, competencies[], contactPage{}, courseworkPage{}, achievementCards[].</p>
+      <label class="full">theme (colors: accent, accent2, bg, surface, surface2, text, muted, border, timelineRole, timelineProject, timelineEvent, timelineLine)
+        <textarea id="theme-json-field" class="code-json" rows="6" placeholder='{"accent":"#9ad88d","bg":"#070a08"}'></textarea>
+      </label>
+      <label class="full">homeHero (eyebrow, titleHtml, lead, optional actionsHtml)
+        <textarea id="home-hero-json-field" class="code-json" rows="5" placeholder="{}"></textarea>
+      </label>
+      <label class="full">quickHighlights (array of { title, body or bodyHtml })
+        <textarea id="quick-highlights-json-field" class="code-json" rows="6" placeholder="[]"></textarea>
+      </label>
+      <label class="full">certifications { completed: [{ text, date|issued|earned?, expires?, note? }], inProgress: [{ text, expected?, date?, expires?, note? }] } — strings still work for plain titles
+        <textarea id="certifications-json-field" class="code-json" rows="8" placeholder="{}"></textarea>
+      </label>
+      <label class="full">competencies [{ kicker, subtle }]
+        <textarea id="competencies-json-field" class="code-json" rows="8" placeholder="[]"></textarea>
+      </label>
+      <label class="full">contactPage { heading, introHtml, actions:[{label,href,variant,external}], cards:[{title,bodyHtml}] }
+        <textarea id="contact-page-json-field" class="code-json" rows="10" placeholder="{}"></textarea>
+      </label>
+      <label class="full">courseworkPage — legacy: { panelTitle, panelSubtitle, categories:[{ title, items:[&quot;CTIS 210 - …&quot; or { code, name }] }], noteHtml } — multiple schools: add institutions:[{ name, subtitle?, categories:[…], noteHtml? }]
+        <textarea id="coursework-page-json-field" class="code-json" rows="14" placeholder="{}"></textarea>
+      </label>
+      <label class="full">achievementCards [{ title, meta, body or bodyHtml }]
+        <textarea id="achievement-cards-json-field" class="code-json" rows="8" placeholder="[]"></textarea>
+      </label>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Resume & Home Page (Firebase)</h2>
+      <p class="subtle">Resume URL updates download buttons site-wide. Home summary replaces the Professional Summary section on the home page (HTML).</p>
+      <div class="form-grid">
+        <label class="full">Resume file URL (or upload a PDF below)
+          <input id="resume-url-field" type="url" placeholder="https://… or ./resume.pdf" />
+        </label>
+        <label class="full">Upload PDF to Firebase Storage (fills URL above — then Save Changes)
+          <input id="resume-file-input" type="file" accept="application/pdf" />
+        </label>
+        <button id="resume-upload-btn" class="btn ghost" type="button">Upload resume PDF</button>
+        <label class="full">Home page summary HTML (optional)
+          <textarea id="home-summary-html-field" rows="6" placeholder="&lt;p&gt;…&lt;/p&gt;"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="section panel reveal">
+      <h2 class="page-title">Projects, Events & Timeline (Firestore)</h2>
+      <p class="subtle">Edit JSON arrays, then <strong>Publish collections to Firestore</strong>. Live site reads these collections and updates Projects, Events, and Timeline together. Until you publish at least one project/event/role, the static HTML fallback stays visible.</p>
+      <p class="subtle">Use <strong>Load Current Site Into CMS</strong> first to convert the existing static pages into these Firestore collections without manual copy/paste. Then use <strong>Publish All To Firestore</strong> or publish collections separately.</p>
+      <div id="cms-json-help" class="subtle section"></div>
+      <label class="full">site_projects (JSON array)
+        <textarea id="bulk-projects-json" rows="10" class="code-json" placeholder="[]"></textarea>
+      </label>
+      <label class="full">site_events (JSON array)
+        <textarea id="bulk-events-json" rows="10" class="code-json" placeholder="[]"></textarea>
+      </label>
+      <label class="full">site_roles (JSON array — timeline “role” rows)
+        <textarea id="bulk-roles-json" rows="8" class="code-json" placeholder="[]"></textarea>
+      </label>
+      <label class="full">site_experience (JSON array — Experience page; section: professional | campus; orderIndex; timeline fields optional)
+        <textarea id="bulk-experience-json" rows="10" class="code-json" placeholder="[]"></textarea>
+      </label>
+      <div class="actions">
+        <button id="publish-collections-btn" class="btn primary" type="button">Publish collections to Firestore</button>
+      </div>
     </section>
 
     <section class="section panel reveal">
@@ -81,7 +154,17 @@
   </main>
 
   <footer><p>&copy; 2026 Mohammad Agha Mohammadi Cyber - all rights reserved Content and design are monitored and protected for digital security compliance.</p></footer>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/cms-api.js"></script>
+  <script src="./js/cms-render.js"></script>
   <script src="./script.js"></script>
   <script src="./portal.js"></script>
+  <script src="./js/accessibility.js"></script>
+  <script src="./js/admin-cms.js"></script>
 </body>
 </html>

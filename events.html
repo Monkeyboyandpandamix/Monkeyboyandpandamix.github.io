@@ -33,6 +33,9 @@
       <h1 class="page-title">Professional Events & Networking</h1>
     </section>
 
+    <div id="events-dynamic-mount" hidden></div>
+
+    <div id="events-static-fallback">
     <section class="section stack reveal">
       <article id="event-featured-guilford-article" class="card">
         <h3>Featured: Guilford College News Article</h3>
@@ -141,10 +144,20 @@
         </details>
       </article>
     </section>
+    </div>
   </main>
 
   <footer><p>Mohammad Agha Mohammadi | <span id="year"></span></p></footer>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/cms-api.js"></script>
+  <script src="./js/cms-render.js"></script>
   <script src="./script.js"></script>
   <script src="./portal.js"></script>
+  <script src="./js/accessibility.js"></script>
 </body>
 </html>

@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSiteAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'maghamohammadi@guilford.edu';
+    }
+
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isSiteAdmin();
+    }
+
+    match /site_projects/{docId} {
+      allow read: if true;
+      allow write: if isSiteAdmin();
+    }
+
+    match /site_events/{docId} {
+      allow read: if true;
+      allow write: if isSiteAdmin();
+    }
+
+    match /site_roles/{docId} {
+      allow read: if true;
+      allow write: if isSiteAdmin();
+    }
+
+    match /site_experience/{docId} {
+      allow read: if true;
+      allow write: if isSiteAdmin();
+    }
+  }
+}

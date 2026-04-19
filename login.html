@@ -27,18 +27,28 @@
   <main class="container">
     <section class="section panel reveal">
       <h1 class="page-title">Portal Login</h1>
+      <p class="subtle">Administrators sign in with Google using <strong>maghamohammadi@guilford.edu</strong>.</p>
+      <button id="google-signin-btn" class="btn primary" type="button">Continue with Google</button>
       <form id="login-form" class="form-grid" autocomplete="off">
-        <label class="full">Password
-          <input id="password" type="password" required />
+        <label class="full">Fallback password (only if Firebase is not configured)
+          <input id="password" type="password" />
         </label>
-        <button class="btn primary" type="submit">Login</button>
+        <button class="btn ghost" type="submit">Login without Firebase</button>
       </form>
       <p id="login-message" class="subtle"></p>
     </section>
   </main>
 
   <footer><p>&copy; 2026 Mohammad Agha Mohammadi Cyber - all rights reserved Content and design are monitored and protected for digital security compliance.</p></footer>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/cms-api.js"></script>
   <script src="./script.js"></script>
   <script src="./portal.js"></script>
+  <script src="./js/accessibility.js"></script>
 </body>
 </html>

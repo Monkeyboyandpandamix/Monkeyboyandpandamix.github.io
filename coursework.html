@@ -29,6 +29,8 @@
   </header>
 
   <main class="container">
+    <div id="coursework-dynamic-mount" class="coursework-cms-dynamic" hidden></div>
+    <div id="coursework-static-fallback">
     <section class="section panel reveal">
       <h1 class="page-title">Academic Coursework</h1>
       <p class="subtle">17 Courses | Computer Science & Cybersecurity Coursework</p>
@@ -82,10 +84,20 @@
       <p>Comprehensive coursework covering programming fundamentals, advanced algorithms, network security, digital forensics, and systems design. Additional experience gained through teaching assistant positions and internship opportunities.</p>
       <p class="subtle">Guilford College, Greensboro | Expected Graduation: May 2026 | GPA: 3.64</p>
     </section>
+    </div>
   </main>
 
   <footer><p>Mohammad Agha Mohammadi | <span id="year"></span></p></footer>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/cms-api.js"></script>
+  <script src="./js/cms-render.js"></script>
   <script src="./script.js"></script>
   <script src="./portal.js"></script>
+  <script src="./js/accessibility.js"></script>
 </body>
 </html>

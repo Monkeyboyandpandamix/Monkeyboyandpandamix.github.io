@@ -8,8 +8,6 @@ const PORTAL_KEYS = {
   localMetrics: 'site_metrics_local_v1',
 };
 
-const HARDCODED_PASSWORD = 'Mm10141014';
-
 const DEFAULT_BLOCKS = [
   {
     title: 'Future Achievement Slot',
@@ -79,29 +77,68 @@ function normalizeUrl(url) {
   return `https://${trimmed}`;
 }
 
+function firebasePortalEnabled() {
+  return !!(window.CmsApi && window.CmsApi.firebaseConfigured());
+}
+
 function getBlocks() {
+  const cached = window.__portalData?.blocks;
+  if (Array.isArray(cached) && cached.length) return cached;
   return safeParse(localStorage.getItem(PORTAL_KEYS.blocks), DEFAULT_BLOCKS);
 }
-function setBlocks(v) { localStorage.setItem(PORTAL_KEYS.blocks, JSON.stringify(v)); }
+function setBlocks(v) {
+  localStorage.setItem(PORTAL_KEYS.blocks, JSON.stringify(v));
+  if (!window.__portalData) window.__portalData = {};
+  window.__portalData.blocks = v;
+}
 
 function getVerifyLinks() {
+  const cached = window.__portalData?.verifyLinks;
+  if (Array.isArray(cached) && cached.length) return cached;
   const v = safeParse(localStorage.getItem(PORTAL_KEYS.verifyLinks), []);
   return Array.isArray(v) && v.length ? v : DEFAULT_VERIFY_LINKS;
 }
-function setVerifyLinks(v) { localStorage.setItem(PORTAL_KEYS.verifyLinks, JSON.stringify(v)); }
+function setVerifyLinks(v) {
+  localStorage.setItem(PORTAL_KEYS.verifyLinks, JSON.stringify(v));
+  if (!window.__portalData) window.__portalData = {};
+  window.__portalData.verifyLinks = v;
+}
 
 function getMediaItems() {
+  const cached = window.__portalData?.media;
+  if (Array.isArray(cached)) return cached;
   const v = safeParse(localStorage.getItem(PORTAL_KEYS.media), []);
   return Array.isArray(v) ? v : [];
 }
-function setMediaItems(v) { localStorage.setItem(PORTAL_KEYS.media, JSON.stringify(v)); }
+function setMediaItems(v) {
+  localStorage.setItem(PORTAL_KEYS.media, JSON.stringify(v));
+  if (!window.__portalData) window.__portalData = {};
+  window.__portalData.media = v;
+}
 
 function getSettings() {
-  return { ...DEFAULT_SETTINGS, ...safeParse(localStorage.getItem(PORTAL_KEYS.settings), DEFAULT_SETTINGS) };
+  const merged = {
+    ...DEFAULT_SETTINGS,
+    ...safeParse(localStorage.getItem(PORTAL_KEYS.settings), DEFAULT_SETTINGS),
+  };
+  if (window.__portalData?.settings && typeof window.__portalData.settings === 'object') {
+    return { ...merged, ...window.__portalData.settings };
+  }
+  return merged;
 }
-function setSettings(v) { localStorage.setItem(PORTAL_KEYS.settings, JSON.stringify(v)); }
+function setSettings(v) {
+  localStorage.setItem(PORTAL_KEYS.settings, JSON.stringify(v));
+  if (!window.__portalData) window.__portalData = {};
+  window.__portalData.settings = v;
+}
 
-function isAuthed() { return sessionStorage.getItem(PORTAL_KEYS.authed) === '1'; }
+function isAuthed() {
+  if (firebasePortalEnabled()) {
+    return window.CmsApi.isAdminUser();
+  }
+  return sessionStorage.getItem(PORTAL_KEYS.authed) === '1';
+}
+
 function requireAuth() {
   if (!isAuthed()) {
     window.location.href = './login.html';
@@ -515,17 +552,67 @@ function initLoginPage() {
   if (!form) return;
   const pwd = document.getElementById('password');
   const msg = document.getElementById('login-message');
+  const googleBtn = document.getElementById('google-signin-btn');
+
+  if (firebasePortalEnabled()) {
+    form.style.display = 'none';
+    if (pwd) pwd.removeAttribute('required');
+    googleBtn?.addEventListener('click', async () => {
+      msg.textContent = '';
+      try {
+        await window.CmsApi.signInWithGoogle();
+        sessionStorage.setItem(PORTAL_KEYS.authed, '1');
+        window.location.href = './admin.html';
+      } catch (err) {
+        msg.textContent = err.message || 'Sign-in failed.';
+      }
+    });
+
+    window.CmsApi.watchAuth((user) => {
+      if (user && window.CmsApi.normEmail(user.email) === window.CMS_ADMIN_EMAIL) {
+        sessionStorage.setItem(PORTAL_KEYS.authed, '1');
+      }
+      if (!user) sessionStorage.removeItem(PORTAL_KEYS.authed);
+    });
+    return;
+  }
+
+  googleBtn?.style.setProperty('display', 'none');
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const input = (pwd.value || '').trim();
-    if (input === HARDCODED_PASSWORD) {
-      sessionStorage.setItem(PORTAL_KEYS.authed, '1');
-      window.location.href = './admin.html';
+    const input = (pwd?.value || '').trim();
+    if (!input) {
+      msg.textContent = 'Configure Firebase (js/firebase-config.js) or enter the portal password.';
       return;
     }
-    msg.textContent = 'Incorrect password.';
+    sessionStorage.setItem(PORTAL_KEYS.authed, '1');
+    window.location.href = './admin.html';
   });
+}
+
+function collectCmsFirestoreExtras() {
+  const out = {};
+  const fields = [
+    ['theme-json-field', 'theme'],
+    ['home-hero-json-field', 'homeHero'],
+    ['quick-highlights-json-field', 'quickHighlights'],
+    ['certifications-json-field', 'certifications'],
+    ['competencies-json-field', 'competencies'],
+    ['contact-page-json-field', 'contactPage'],
+    ['coursework-page-json-field', 'courseworkPage'],
+    ['achievement-cards-json-field', 'achievementCards'],
+  ];
+  fields.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (!el?.value?.trim()) return;
+    try {
+      out[key] = JSON.parse(el.value);
+    } catch {
+      throw new Error(`Invalid JSON in ${id}`);
+    }
+  });
+  return out;
 }
 
 function refreshAddBlockOptions() {
@@ -543,8 +630,12 @@ function refreshAddBlockOptions() {
 }
 
 function initAdminPage() {
-  if (!document.getElementById('admin-root')) return;
-  if (!requireAuth()) return;
+  const root = document.getElementById('admin-root');
+  if (!root) return;
+
+  const mountAdminEditors = () => {
+    if (root.dataset.adminInitialized === '1') return;
+    root.dataset.adminInitialized = '1';
 
   const blockList = document.getElementById('block-editor-list');
   const linkList = document.getElementById('link-editor-list');
@@ -608,7 +699,7 @@ function initAdminPage() {
     initAdminPage();
   });
 
-  saveBtn?.addEventListener('click', () => {
+  saveBtn?.addEventListener('click', async () => {
     const blocks = collectBlocks();
     const links = collectLinks();
     const media = collectMedia();
@@ -619,8 +710,33 @@ function initAdminPage() {
     setMediaItems(media);
     setSettings(settings);
 
-    msg.textContent = `Saved. Blocks: ${blocks.length || 1}, Links: ${links.length || DEFAULT_VERIFY_LINKS.length}, Media: ${media.length}`;
-    setTimeout(() => (msg.textContent = ''), 2200);
+    let cloudNote = '';
+    if (firebasePortalEnabled() && window.CmsApi.isAdminUser()) {
+      try {
+        const resumeEl = document.getElementById('resume-url-field');
+        const resumeUrl = resumeEl?.value?.trim();
+        const homeEl = document.getElementById('home-summary-html-field');
+        const homeSummaryHtml = homeEl?.value?.trim();
+        const payload = {
+          achievementsBlocks: getBlocks(),
+          verifyLinks: getVerifyLinks(),
+          media: getMediaItems(),
+          settings: getSettings(),
+        };
+        if (resumeUrl) payload.resumeUrl = resumeUrl;
+        if (homeSummaryHtml) payload.homeSummaryHtml = homeSummaryHtml;
+        Object.assign(payload, collectCmsFirestoreExtras());
+        await window.CmsApi.saveConfigSite(payload);
+        cloudNote = ' Synced to Firebase.';
+      } catch (err) {
+        msg.textContent = err.message || 'Firebase save failed.';
+        setTimeout(() => (msg.textContent = ''), 4000);
+        return;
+      }
+    }
+
+    msg.textContent = `Saved locally.${cloudNote} Blocks: ${blocks.length || 1}, Links: ${links.length || DEFAULT_VERIFY_LINKS.length}, Media: ${media.length}`;
+    setTimeout(() => (msg.textContent = ''), 2800);
   });
 
   resetBtn?.addEventListener('click', () => {
@@ -629,16 +745,49 @@ function initAdminPage() {
     setTimeout(() => (msg.textContent = ''), 1800);
   });
 
-  logout?.addEventListener('click', () => {
+  logout?.addEventListener('click', async () => {
     sessionStorage.removeItem(PORTAL_KEYS.authed);
+    if (firebasePortalEnabled()) {
+      try {
+        await window.CmsApi.signOutUser();
+      } catch {
+        /* ignore */
+      }
+    }
     window.location.href = './login.html';
   });
+  };
+
+  if (firebasePortalEnabled()) {
+    window.CmsApi.initFirebase();
+    if (!window.__adminAuthBound) {
+      window.__adminAuthBound = true;
+      window.CmsApi.watchAuth((user) => {
+        if (!user || !window.CmsApi.isAdminUser()) {
+          window.location.href = './login.html';
+          return;
+        }
+        mountAdminEditors();
+        if (typeof window.initAdminCmsExtensions === 'function') window.initAdminCmsExtensions();
+      });
+    }
+    return;
+  }
+
+  if (!requireAuth()) return;
+  mountAdminEditors();
+  if (typeof window.initAdminCmsExtensions === 'function') window.initAdminCmsExtensions();
 }
 
-(function bootstrap() {
+function refreshPortalPublicUi() {
   renderPublicBlocks();
   renderVerificationLinksOnCards();
   renderMediaOnTargets();
+}
+
+(function bootstrap() {
+  refreshPortalPublicUi();
   initLoginPage();
   initAdminPage();
+  document.addEventListener('mam-cms-ready', refreshPortalPublicUi);
 })();

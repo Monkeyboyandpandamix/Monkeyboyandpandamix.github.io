@@ -36,3 +36,10 @@ Your site URL format:
 - Visitor metrics tracked:
   - Local per-page views and last visit (browser-local)
   - Global counter via CountAPI (`https://api.countapi.xyz`)
+
+## Firestore CMS
+- Firebase project is configured as `website-9a938` in `.firebaserc`.
+- Open `admin.html`, click `Load Current Site Into CMS` to convert the current static pages into CMS JSON, then click `Publish All To Firestore`.
+- Or seed directly from the terminal with `python3 scripts/seed_firestore.py`.
+- Deploy rules with `firebase deploy --only firestore:rules,storage`.
+- Firebase Storage must be initialized in the Firebase console before resume uploads and `storage.rules` deployment will work.
