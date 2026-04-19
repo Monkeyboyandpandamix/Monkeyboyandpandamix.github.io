@@ -815,53 +815,73 @@
     const contactEmail = (cfg.contactPage && cfg.contactPage.email) || cfg.contactEmail;
     if (contactEmail) applyContactEmail(contactEmail);
 
-    // Projects, Events, and Timeline are CMS-driven (admin is the source of truth).
-    // Always swap when CMS has data, regardless of static richness, so admin edits
-    // are visibly reflected. Other pages keep the safeSwap guard.
+    // Projects, Events, Timeline: admin owns the source of truth, but we only
+    // replace the static fallback if the CMS list is "complete enough" so that
+    // a stale or partial Firebase snapshot can't wipe a richer static page.
+    // Threshold: CMS must have at least ~50% as many items as the static
+    // fallback (and at least 1). Below that, we keep the static and log why.
+    function canTrustCmsList(staticCount, cmsCount, label) {
+      const min = Math.max(1, Math.floor(staticCount * 0.5));
+      const ok = cmsCount >= min;
+      if (!ok) {
+        console.info(`[CMS] Keeping static ${label} (CMS has ${cmsCount}, needs ≥ ${min} of ${staticCount} static).`);
+      }
+      return ok;
+    }
+
     const projects = data.projects || [];
     const mountP = document.getElementById('projects-dynamic-mount');
     const fbP = document.getElementById('projects-static-fallback');
     if (mountP && fbP && projects.length) {
-      const projHtml = projects
-        .sort((a, b) => {
-          const bo = Number(b.orderIndex);
-          const ao = Number(a.orderIndex);
-          if (Number.isFinite(bo) && Number.isFinite(ao) && bo !== ao) return bo - ao;
-          return parseSortMs(b.timelineSortMs) - parseSortMs(a.timelineSortMs);
-        })
-        .map(buildProjectCard)
-        .join('');
-      mountP.innerHTML = projHtml;
-      mountP.hidden = false;
-      fbP.hidden = true;
+      const staticCount = fbP.querySelectorAll('article').length;
+      if (canTrustCmsList(staticCount, projects.length, 'projects')) {
+        const projHtml = projects
+          .sort((a, b) => {
+            const bo = Number(b.orderIndex);
+            const ao = Number(a.orderIndex);
+            if (Number.isFinite(bo) && Number.isFinite(ao) && bo !== ao) return bo - ao;
+            return parseSortMs(b.timelineSortMs) - parseSortMs(a.timelineSortMs);
+          })
+          .map(buildProjectCard)
+          .join('');
+        mountP.innerHTML = projHtml;
+        mountP.hidden = false;
+        fbP.hidden = true;
+      }
     }
 
     const events = data.events || [];
     const mountE = document.getElementById('events-dynamic-mount');
     const fbE = document.getElementById('events-static-fallback');
     if (mountE && fbE && events.length) {
-      const prof = events.filter((e) => (e.bucket || 'professional') !== 'competitions');
-      const comp = events.filter((e) => (e.bucket || '') === 'competitions');
-      const eventsPageCfg = cfg.eventsPage && typeof cfg.eventsPage === 'object' ? cfg.eventsPage : {};
-      let html = '';
-      if (prof.length) {
-        html += `<section class="section stack reveal">${prof.map(buildEventCard).join('')}</section>`;
+      const staticCount = fbE.querySelectorAll('article').length;
+      if (canTrustCmsList(staticCount, events.length, 'events')) {
+        const prof = events.filter((e) => (e.bucket || 'professional') !== 'competitions');
+        const comp = events.filter((e) => (e.bucket || '') === 'competitions');
+        const eventsPageCfg = cfg.eventsPage && typeof cfg.eventsPage === 'object' ? cfg.eventsPage : {};
+        let html = '';
+        if (prof.length) {
+          html += `<section class="section stack reveal">${prof.map(buildEventCard).join('')}</section>`;
+        }
+        if (comp.length) {
+          html += `<section class="section panel reveal"><h2 class="page-title">${escapeHtml(eventsPageCfg.competitionsHeading || 'Capture The Flags & Hackathons Attended')}</h2><p class="subtle">${escapeHtml(eventsPageCfg.competitionsIntro || 'Competition and challenge events focused on practical cybersecurity and collaborative problem solving.')}</p></section><section class="section stack reveal">${comp.map(buildEventCard).join('')}</section>`;
+        }
+        mountE.innerHTML = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
+        mountE.hidden = false;
+        fbE.hidden = true;
       }
-      if (comp.length) {
-        html += `<section class="section panel reveal"><h2 class="page-title">${escapeHtml(eventsPageCfg.competitionsHeading || 'Capture The Flags & Hackathons Attended')}</h2><p class="subtle">${escapeHtml(eventsPageCfg.competitionsIntro || 'Competition and challenge events focused on practical cybersecurity and collaborative problem solving.')}</p></section><section class="section stack reveal">${comp.map(buildEventCard).join('')}</section>`;
-      }
-      mountE.innerHTML = html || `<section class="section stack reveal">${events.map(buildEventCard).join('')}</section>`;
-      mountE.hidden = false;
-      fbE.hidden = true;
     }
 
     const timelineRows = mergeTimelineRows(data, settings);
     const mountT = document.getElementById('timeline-dynamic-mount');
     const fbT = document.getElementById('timeline-static-fallback');
     if (mountT && fbT && timelineRows.length) {
-      mountT.innerHTML = timelineRows.map(buildTimelineArticle).join('');
-      mountT.hidden = false;
-      fbT.hidden = true;
+      const staticCount = fbT.querySelectorAll('article').length;
+      if (canTrustCmsList(staticCount, timelineRows.length, 'timeline')) {
+        mountT.innerHTML = timelineRows.map(buildTimelineArticle).join('');
+        mountT.hidden = false;
+        fbT.hidden = true;
+      }
     }
 
     if (payload && payload.resumeUrl) applyResumeLinks(payload.resumeUrl);
