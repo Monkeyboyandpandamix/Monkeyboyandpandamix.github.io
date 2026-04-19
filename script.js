@@ -93,7 +93,16 @@ function initExpandableBlocks() {
   };
 
   const makeExpandable = (container, keepCount, kind) => {
-    if (!container || container.dataset.expandReady === '1') return;
+    if (!container) return;
+    if (container.dataset.expandReady === '1') {
+      const hasButton = !!container.querySelector(':scope > .expand-arrow-btn, :scope > .expand-title-row .expand-arrow-btn');
+      const hasContent = !!container.querySelector(':scope > .card-expand-content');
+      if (hasButton && hasContent) return;
+      container.dataset.expandReady = '0';
+      container.classList.remove('card-expandable', 'section-expandable', 'is-open');
+      container.querySelectorAll(':scope > .expand-arrow-btn, :scope > .card-expand-content').forEach((node) => node.remove());
+      container.querySelectorAll(':scope > .expand-title-row').forEach((node) => node.classList.remove('expand-title-row'));
+    }
     const kids = [...container.children];
     if (kids.length <= keepCount) return;
 

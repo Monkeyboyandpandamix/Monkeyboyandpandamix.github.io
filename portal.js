@@ -413,18 +413,6 @@ function makeMediaEditorRow(item, index) {
   return row;
 }
 
-function collectBlocks() {
-  const rows = [...document.querySelectorAll('#block-editor-list .card')];
-  return rows.map((r) => ({
-    title: r.querySelector('[data-field="title"]').value.trim(),
-    subtitle: r.querySelector('[data-field="subtitle"]').value.trim(),
-    date: r.querySelector('[data-field="date"]').value.trim(),
-    status: r.querySelector('[data-field="status"]').value.trim(),
-    description: r.querySelector('[data-field="description"]').value.trim(),
-    tags: r.querySelector('[data-field="tags"]').value.split(',').map((x) => x.trim()).filter(Boolean),
-  }));
-}
-
 function collectLinks() {
   const rows = [...document.querySelectorAll('#link-editor-list .card')];
   return rows
@@ -614,20 +602,6 @@ function collectCmsFirestoreExtras() {
   return out;
 }
 
-function refreshAddBlockOptions() {
-  const select = document.getElementById('add-block-position');
-  if (!select) return;
-  const blocks = getBlocks();
-  select.innerHTML = '';
-  for (let i = 0; i <= blocks.length; i += 1) {
-    const o = document.createElement('option');
-    o.value = String(i);
-    o.textContent = `Position ${i + 1}`;
-    if (i === blocks.length) o.selected = true;
-    select.appendChild(o);
-  }
-}
-
 function initAdminPage() {
   const root = document.getElementById('admin-root');
   if (!root) return;
@@ -636,23 +610,14 @@ function initAdminPage() {
     if (root.dataset.adminInitialized === '1') return;
     root.dataset.adminInitialized = '1';
 
-  const blockList = document.getElementById('block-editor-list');
   const linkList = document.getElementById('link-editor-list');
   const mediaList = document.getElementById('media-editor-list');
-  const addBlock = document.getElementById('add-block');
   const addLink = document.getElementById('add-link');
   const addMedia = document.getElementById('add-media');
   const saveBtn = document.getElementById('save-blocks');
   const logout = document.getElementById('logout-btn');
   const resetBtn = document.getElementById('reset-metrics-btn');
   const msg = document.getElementById('admin-message');
-
-  if (blockList) {
-    const blocks = getBlocks();
-    blockList.innerHTML = '';
-    blocks.forEach((b, i) => blockList.appendChild(makeBlockEditorRow(b, i, blocks.length)));
-  }
-  refreshAddBlockOptions();
 
   if (linkList) {
     const links = getVerifyLinks();
@@ -669,21 +634,6 @@ function initAdminPage() {
   renderSettingsUI();
   renderMetrics();
 
-  addBlock?.addEventListener('click', () => {
-    const blocks = getBlocks();
-    const pos = Number(document.getElementById('add-block-position')?.value ?? blocks.length);
-    blocks.splice(Math.max(0, Math.min(pos, blocks.length)), 0, {
-      title: 'New Block',
-      subtitle: 'Future Achievement',
-      date: 'Future',
-      status: 'Planned',
-      description: 'Add details for your upcoming achievement.',
-      tags: ['Future'],
-    });
-    setBlocks(blocks);
-    initAdminPage();
-  });
-
   addLink?.addEventListener('click', () => {
     const links = getVerifyLinks();
     links.push({ target: 'Project or Hackathon Title', page: 'projects.html', category: 'Project', label: 'Verification Link', url: 'https://' });
@@ -699,12 +649,10 @@ function initAdminPage() {
   });
 
   saveBtn?.addEventListener('click', async () => {
-    const blocks = collectBlocks();
     const links = collectLinks();
     const media = collectMedia();
     const settings = collectSettings();
 
-    setBlocks(blocks);
     setVerifyLinks(links.length ? links : DEFAULT_VERIFY_LINKS);
     setMediaItems(media);
     setSettings(settings);

@@ -488,6 +488,146 @@
     items.forEach((item, index) => mount.appendChild(renderer(item, index)));
   }
 
+  function bindAdminTabs() {
+    const tabs = [...document.querySelectorAll('[data-admin-tab]')];
+    const panels = [...document.querySelectorAll('[data-admin-panel]')];
+    if (!tabs.length || !panels.length) return () => {};
+
+    const openTab = (name) => {
+      tabs.forEach((tab) => {
+        const active = tab.getAttribute('data-admin-tab') === name;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panels.forEach((panel) => {
+        const active = panel.getAttribute('data-admin-panel') === name;
+        panel.classList.toggle('is-active', active);
+        panel.hidden = !active;
+      });
+    };
+
+    tabs.forEach((tab) => {
+      if (tab.dataset.bound) return;
+      tab.dataset.bound = '1';
+      tab.addEventListener('click', () => openTab(tab.getAttribute('data-admin-tab')));
+    });
+
+    openTab(tabs.find((tab) => tab.classList.contains('is-active'))?.getAttribute('data-admin-tab') || tabs[0].getAttribute('data-admin-tab'));
+    return openTab;
+  }
+
+  function editorLooksEmpty() {
+    const textareas = [
+      'bulk-projects-json',
+      'bulk-events-json',
+      'bulk-experience-json',
+      'achievement-cards-json-field',
+      'contact-page-json-field',
+      'coursework-page-json-field',
+      'home-hero-json-field',
+    ];
+    return textareas.every((id) => {
+      const value = document.getElementById(id)?.value?.trim();
+      return !value || value === '[]' || value === '{}';
+    });
+  }
+
+  function fieldHasMeaningfulValue(id) {
+    const value = document.getElementById(id)?.value?.trim();
+    return !!value && value !== '[]' && value !== '{}';
+  }
+
+  async function hydrateMissingEditorSectionsFromStatic() {
+    const needsStatic = {
+      homeHero: !fieldHasMeaningfulValue('home-hero-json-field'),
+      homeSummary: !document.getElementById('home-summary-html-field')?.value?.trim(),
+      quickHighlights: !fieldHasMeaningfulValue('quick-highlights-json-field'),
+      certifications: !fieldHasMeaningfulValue('certifications-json-field'),
+      competencies: !fieldHasMeaningfulValue('competencies-json-field'),
+      contactPage: !fieldHasMeaningfulValue('contact-page-json-field'),
+      courseworkPage: !fieldHasMeaningfulValue('coursework-page-json-field'),
+      projectsPage: !fieldHasMeaningfulValue('projects-page-json-field'),
+      eventsPage: !fieldHasMeaningfulValue('events-page-json-field'),
+      timelinePage: !fieldHasMeaningfulValue('timeline-page-json-field'),
+      experiencePage: !fieldHasMeaningfulValue('experience-page-json-field'),
+      achievementsPage: !fieldHasMeaningfulValue('achievements-page-json-field'),
+      achievementCards: !fieldHasMeaningfulValue('achievement-cards-json-field'),
+      projects: !fieldHasMeaningfulValue('bulk-projects-json'),
+      events: !fieldHasMeaningfulValue('bulk-events-json'),
+      roles: !fieldHasMeaningfulValue('bulk-roles-json'),
+      experience: !fieldHasMeaningfulValue('bulk-experience-json'),
+    };
+
+    if (!Object.values(needsStatic).some(Boolean)) return;
+
+    const docs = await fetchStaticDocs();
+    const timelineIndex = buildTimelineIndex(docs['timeline.html']);
+
+    if (needsStatic.homeHero || needsStatic.homeSummary || needsStatic.quickHighlights || needsStatic.certifications || needsStatic.competencies) {
+      const config = buildIndexConfig(docs['index.html']);
+      if (needsStatic.homeHero) setTextarea('home-hero-json-field', config.homeHero);
+      if (needsStatic.homeSummary) setTextarea('home-summary-html-field', config.homeSummaryHtml);
+      if (needsStatic.quickHighlights) setTextarea('quick-highlights-json-field', config.quickHighlights);
+      if (needsStatic.certifications) setTextarea('certifications-json-field', config.certifications);
+      if (needsStatic.competencies) setTextarea('competencies-json-field', config.competencies);
+    }
+
+    if (needsStatic.contactPage) {
+      setTextarea('contact-page-json-field', buildContactConfig(docs['contact.html']));
+    }
+    if (needsStatic.courseworkPage) {
+      setTextarea('coursework-page-json-field', buildCourseworkConfig(docs['coursework.html']));
+    }
+    if (needsStatic.projectsPage) {
+      setTextarea('projects-page-json-field', buildSimplePageConfig(docs['projects.html'], [
+        ['heading', '.section.panel .page-title'],
+        ['intro', '.section.panel .subtle'],
+      ]));
+    }
+    if (needsStatic.eventsPage) {
+      setTextarea('events-page-json-field', buildSimplePageConfig(docs['events.html'], [
+        ['heading', '.section.panel .page-title'],
+        ['intro', '.section.panel .subtle'],
+        ['competitionsHeading', '#events-static-fallback > .section.panel:nth-of-type(2) .page-title'],
+        ['competitionsIntro', '#events-static-fallback > .section.panel:nth-of-type(2) .subtle'],
+      ]));
+    }
+    if (needsStatic.timelinePage) {
+      setTextarea('timeline-page-json-field', buildSimplePageConfig(docs['timeline.html'], [
+        ['heading', '.section.panel .page-title'],
+        ['intro', '.section.panel .subtle'],
+      ]));
+    }
+    if (needsStatic.experiencePage) {
+      setTextarea('experience-page-json-field', buildSimplePageConfig(docs['experience.html'], [
+        ['heading', '.section.panel .page-title'],
+        ['intro', '.section.panel .subtle'],
+        ['professionalHeading', '#experience-static-fallback > section:nth-of-type(1) .page-title'],
+        ['campusHeading', '#experience-static-fallback > section:nth-of-type(2) .page-title'],
+      ]));
+    }
+    if (needsStatic.achievementsPage) {
+      setTextarea('achievements-page-json-field', buildSimplePageConfig(docs['achievements.html'], [
+        ['heading', '.section.panel .page-title'],
+      ]));
+    }
+    if (needsStatic.achievementCards) {
+      setTextarea('achievement-cards-json-field', buildAchievementCards(docs['achievements.html']));
+    }
+    if (needsStatic.projects) {
+      setTextarea('bulk-projects-json', buildProjectsSeed(docs['projects.html'], timelineIndex));
+    }
+    if (needsStatic.events) {
+      setTextarea('bulk-events-json', buildEventsSeed(docs['events.html'], timelineIndex));
+    }
+    if (needsStatic.roles) {
+      setTextarea('bulk-roles-json', buildRolesSeed(docs['timeline.html']));
+    }
+    if (needsStatic.experience) {
+      setTextarea('bulk-experience-json', buildExperienceSeed(docs['experience.html']));
+    }
+  }
+
   function projectEditorCard(item, index) {
     const card = makeFriendlyEditorCard(`Project ${index + 1}`, `
       <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
@@ -596,6 +736,81 @@
       const list = getFriendlyContactCards();
       list.splice(index, 1);
       setFriendlyContactCards(list);
+      renderFriendlyEditors();
+    });
+    return card;
+  }
+
+  function achievementCardEditorCard(item, index) {
+    const card = makeFriendlyEditorCard(`Achievement ${index + 1}`, `
+      <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
+      <label>Meta<input data-field="meta" value="${escapeAttr(item.meta)}" /></label>
+      <label class="full">Body<textarea data-field="body" rows="4">${escapeAttr(item.bodyText)}</textarea></label>
+    `);
+    card.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      const list = getFriendlyAchievementCards();
+      list.splice(index, 1);
+      setFriendlyAchievementCards(list);
+      renderFriendlyEditors();
+    });
+    return card;
+  }
+
+  function roleEditorCard(item, index) {
+    const card = makeFriendlyEditorCard(`Timeline Role ${index + 1}`, `
+      <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
+      <label>Slug<input data-field="slug" value="${escapeAttr(item.slug)}" /></label>
+      <label>Date<input data-field="timelineDateLabel" value="${escapeAttr(item.timelineDateLabel || '')}" /></label>
+      <label class="full">Summary<textarea data-field="summary" rows="4">${escapeAttr(item.summaryText || '')}</textarea></label>
+    `);
+    card.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      const list = getFriendlyRoles();
+      list.splice(index, 1);
+      setFriendlyRoles(list);
+      renderFriendlyEditors();
+    });
+    return card;
+  }
+
+  function highlightEditorCard(item, index) {
+    const card = makeFriendlyEditorCard(`Highlight ${index + 1}`, `
+      <label>Title<input data-field="title" value="${escapeAttr(item.title)}" /></label>
+      <label class="full">Body<textarea data-field="body" rows="4">${escapeAttr(item.bodyText || '')}</textarea></label>
+    `);
+    card.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      const list = getFriendlyQuickHighlights();
+      list.splice(index, 1);
+      setFriendlyQuickHighlights(list);
+      renderFriendlyEditors();
+    });
+    return card;
+  }
+
+  function competencyEditorCard(item, index) {
+    const card = makeFriendlyEditorCard(`Competency ${index + 1}`, `
+      <label>Kicker<input data-field="kicker" value="${escapeAttr(item.kicker || '')}" /></label>
+      <label class="full">Description<textarea data-field="subtle" rows="3">${escapeAttr(item.subtle || '')}</textarea></label>
+    `);
+    card.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      const list = getFriendlyCompetencies();
+      list.splice(index, 1);
+      setFriendlyCompetencies(list);
+      renderFriendlyEditors();
+    });
+    return card;
+  }
+
+  function certificationEditorCard(item, index, type) {
+    const card = makeFriendlyEditorCard(`${type === 'completed' ? 'Completed' : 'In Progress'} Cert ${index + 1}`, `
+      <label>Title<input data-field="text" value="${escapeAttr(item.text || '')}" /></label>
+      <label>Date / Expected<input data-field="date" value="${escapeAttr(item.date || item.expected || '')}" /></label>
+      <label class="full">Note<textarea data-field="note" rows="3">${escapeAttr(item.note || '')}</textarea></label>
+    `);
+    card.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      const list = type === 'completed' ? getFriendlyCompletedCerts() : getFriendlyProgressCerts();
+      list.splice(index, 1);
+      if (type === 'completed') setFriendlyCompletedCerts(list);
+      else setFriendlyProgressCerts(list);
       renderFriendlyEditors();
     });
     return card;
@@ -741,7 +956,102 @@
     setTextarea('contact-page-json-field', contact);
   }
 
+  function getFriendlyAchievementCards() {
+    return parseFieldJson('achievement-cards-json-field', []).map((item) => ({
+      ...item,
+      bodyText: htmlToText(item.bodyHtml || item.body),
+    }));
+  }
+
+  function setFriendlyAchievementCards(items) {
+    const out = items.map((item) => ({
+      title: item.title || '',
+      meta: item.meta || '',
+      bodyHtml: item.bodyText ? `<p>${String(item.bodyText).split('\n').join('</p><p>')}</p>` : '',
+    }));
+    setTextarea('achievement-cards-json-field', out);
+  }
+
+  function getFriendlyRoles() {
+    return parseFieldJson('bulk-roles-json', []).map((item) => ({
+      ...item,
+      summaryText: htmlToText(item.summaryHtml),
+    }));
+  }
+
+  function setFriendlyRoles(items) {
+    const out = items.map((item, index) => ({
+      slug: item.slug || makeSlug(item.title, `role-${index + 1}`),
+      title: item.title || '',
+      summaryHtml: item.summaryText ? `<p>${String(item.summaryText).split('\n').join('</p><p>')}</p>` : '',
+      timelineEnabled: true,
+      timelineDateLabel: item.timelineDateLabel || '',
+      timelineSortMs: item.timelineSortMs || parseTimelineSortMs(item.timelineDateLabel || ''),
+    }));
+    setTextarea('bulk-roles-json', out);
+  }
+
+  function getFriendlyQuickHighlights() {
+    return parseFieldJson('quick-highlights-json-field', []).map((item) => ({
+      ...item,
+      bodyText: htmlToText(item.bodyHtml || item.body),
+    }));
+  }
+
+  function setFriendlyQuickHighlights(items) {
+    setTextarea('quick-highlights-json-field', items.map((item) => ({
+      title: item.title || '',
+      body: item.bodyText || '',
+    })));
+  }
+
+  function getFriendlyCompetencies() {
+    return parseFieldJson('competencies-json-field', []);
+  }
+
+  function setFriendlyCompetencies(items) {
+    setTextarea('competencies-json-field', items.map((item) => ({
+      kicker: item.kicker || '',
+      subtle: item.subtle || '',
+    })));
+  }
+
+  function getFriendlyCompletedCerts() {
+    const certifications = parseFieldJson('certifications-json-field', {});
+    return Array.isArray(certifications.completed) ? certifications.completed : [];
+  }
+
+  function setFriendlyCompletedCerts(items) {
+    const certifications = parseFieldJson('certifications-json-field', {});
+    certifications.completed = items.map((item) => ({
+      text: item.text || '',
+      date: item.date || '',
+      note: item.note || '',
+    }));
+    setTextarea('certifications-json-field', certifications);
+  }
+
+  function getFriendlyProgressCerts() {
+    const certifications = parseFieldJson('certifications-json-field', {});
+    return Array.isArray(certifications.inProgress) ? certifications.inProgress : [];
+  }
+
+  function setFriendlyProgressCerts(items) {
+    const certifications = parseFieldJson('certifications-json-field', {});
+    certifications.inProgress = items.map((item) => ({
+      text: item.text || '',
+      expected: item.date || item.expected || '',
+      note: item.note || '',
+    }));
+    setTextarea('certifications-json-field', certifications);
+  }
+
   function syncFriendlyTextFields() {
+    setTextarea('home-hero-json-field', {
+      eyebrow: document.getElementById('friendly-home-eyebrow')?.value?.trim() || '',
+      titleHtml: document.getElementById('friendly-home-title')?.value?.trim() || '',
+      lead: document.getElementById('friendly-home-lead')?.value?.trim() || '',
+    });
     setTextarea('projects-page-json-field', {
       heading: document.getElementById('friendly-projects-heading')?.value?.trim() || '',
       intro: document.getElementById('friendly-projects-intro')?.value?.trim() || '',
@@ -752,6 +1062,10 @@
       competitionsHeading: document.getElementById('friendly-events-competitions-heading')?.value?.trim() || '',
       competitionsIntro: document.getElementById('friendly-events-competitions-intro')?.value?.trim() || '',
     });
+    setTextarea('timeline-page-json-field', {
+      heading: document.getElementById('friendly-timeline-heading')?.value?.trim() || '',
+      intro: document.getElementById('friendly-timeline-intro')?.value?.trim() || '',
+    });
     setTextarea('experience-page-json-field', {
       heading: document.getElementById('friendly-experience-heading')?.value?.trim() || '',
       intro: document.getElementById('friendly-experience-intro')?.value?.trim() || '',
@@ -760,7 +1074,6 @@
     });
     setTextarea('achievements-page-json-field', {
       heading: document.getElementById('friendly-achievements-heading')?.value?.trim() || '',
-      editableHeading: document.getElementById('friendly-achievements-editable-heading')?.value?.trim() || '',
     });
     const contact = parseFieldJson('contact-page-json-field', {});
     contact.heading = document.getElementById('friendly-contact-heading')?.value?.trim() || '';
@@ -775,32 +1088,54 @@
     const note = document.getElementById('friendly-coursework-note')?.value?.trim() || '';
     coursework.noteHtml = note ? `<p>${note.split('\n').join('</p><p>')}</p>` : '';
     setTextarea('coursework-page-json-field', coursework);
+    const homeSummary = document.getElementById('friendly-home-summary')?.value?.trim() || '';
+    setTextarea('home-summary-html-field', homeSummary ? `<p>${homeSummary.split('\n').join('</p><p>')}</p>` : '');
   }
 
   function loadFriendlyTextFields() {
+    const homeHero = parseFieldJson('home-hero-json-field', {});
     const projectsPage = parseFieldJson('projects-page-json-field', {});
     const eventsPage = parseFieldJson('events-page-json-field', {});
+    const timelinePage = parseFieldJson('timeline-page-json-field', {});
     const experiencePage = parseFieldJson('experience-page-json-field', {});
     const achievementsPage = parseFieldJson('achievements-page-json-field', {});
     const contact = parseFieldJson('contact-page-json-field', {});
     const coursework = parseFieldJson('coursework-page-json-field', {});
+    document.getElementById('friendly-home-eyebrow').value = homeHero.eyebrow || '';
+    document.getElementById('friendly-home-title').value = htmlToText(homeHero.titleHtml);
+    document.getElementById('friendly-home-lead').value = homeHero.lead || '';
+    document.getElementById('friendly-home-summary').value = htmlToText(document.getElementById('home-summary-html-field')?.value || '');
     document.getElementById('friendly-projects-heading').value = projectsPage.heading || '';
     document.getElementById('friendly-projects-intro').value = projectsPage.intro || '';
     document.getElementById('friendly-events-heading').value = eventsPage.heading || '';
     document.getElementById('friendly-events-intro').value = eventsPage.intro || '';
     document.getElementById('friendly-events-competitions-heading').value = eventsPage.competitionsHeading || '';
     document.getElementById('friendly-events-competitions-intro').value = eventsPage.competitionsIntro || '';
+    document.getElementById('friendly-timeline-heading').value = timelinePage.heading || '';
+    document.getElementById('friendly-timeline-intro').value = timelinePage.intro || '';
     document.getElementById('friendly-experience-heading').value = experiencePage.heading || '';
     document.getElementById('friendly-experience-intro').value = experiencePage.intro || '';
     document.getElementById('friendly-experience-professional-heading').value = experiencePage.professionalHeading || '';
     document.getElementById('friendly-experience-campus-heading').value = experiencePage.campusHeading || '';
     document.getElementById('friendly-achievements-heading').value = achievementsPage.heading || '';
-    document.getElementById('friendly-achievements-editable-heading').value = achievementsPage.editableHeading || '';
     document.getElementById('friendly-contact-heading').value = contact.heading || '';
     document.getElementById('friendly-contact-intro').value = htmlToText(contact.introHtml);
     document.getElementById('friendly-coursework-heading').value = coursework.panelTitle || '';
     document.getElementById('friendly-coursework-subtitle').value = coursework.panelSubtitle || '';
     document.getElementById('friendly-coursework-note').value = htmlToText(coursework.noteHtml);
+    const theme = parseFieldJson('theme-json-field', {});
+    document.getElementById('friendly-theme-accent').value = theme.accent || '';
+    document.getElementById('friendly-theme-accent2').value = theme.accent2 || '';
+    document.getElementById('friendly-theme-bg').value = theme.bg || '';
+    document.getElementById('friendly-theme-surface').value = theme.surface || '';
+    document.getElementById('friendly-theme-surface2').value = theme.surface2 || '';
+    document.getElementById('friendly-theme-text').value = theme.text || '';
+    document.getElementById('friendly-theme-muted').value = theme.muted || '';
+    document.getElementById('friendly-theme-border').value = theme.border || '';
+    document.getElementById('friendly-theme-timeline-role').value = theme.timelineRole || '';
+    document.getElementById('friendly-theme-timeline-project').value = theme.timelineProject || '';
+    document.getElementById('friendly-theme-timeline-event').value = theme.timelineEvent || '';
+    document.getElementById('friendly-theme-timeline-line').value = theme.timelineLine || '';
   }
 
   function renderFriendlyEditors() {
@@ -808,9 +1143,15 @@
     renderFriendlyList('friendly-project-list', getFriendlyProjects(), projectEditorCard);
     renderFriendlyList('friendly-event-list', getFriendlyEvents(), eventEditorCard);
     renderFriendlyList('friendly-experience-list', getFriendlyExperience(), experienceEditorCard);
+    renderFriendlyList('friendly-role-list', getFriendlyRoles(), roleEditorCard);
+    renderFriendlyList('friendly-highlight-list', getFriendlyQuickHighlights(), highlightEditorCard);
+    renderFriendlyList('friendly-competency-list', getFriendlyCompetencies(), competencyEditorCard);
+    renderFriendlyList('friendly-cert-completed-list', getFriendlyCompletedCerts(), (item, index) => certificationEditorCard(item, index, 'completed'));
+    renderFriendlyList('friendly-cert-progress-list', getFriendlyProgressCerts(), (item, index) => certificationEditorCard(item, index, 'progress'));
     renderFriendlyList('friendly-school-list', getFriendlySchools(), schoolEditorCard);
     renderFriendlyList('friendly-contact-action-list', getFriendlyContactActions(), contactActionEditorCard);
     renderFriendlyList('friendly-contact-card-list', getFriendlyContactCards(), contactCardEditorCard);
+    renderFriendlyList('friendly-achievement-card-list', getFriendlyAchievementCards(), achievementCardEditorCard);
   }
 
   function syncFriendlyEditorsToJson() {
@@ -852,6 +1193,40 @@
         chips: card.querySelector('[data-field="chips"]').value.trim(),
       }))
     );
+    setFriendlyRoles(
+      collectFromCards('friendly-role-list', (card) => ({
+        title: card.querySelector('[data-field="title"]').value.trim(),
+        slug: card.querySelector('[data-field="slug"]').value.trim(),
+        timelineDateLabel: card.querySelector('[data-field="timelineDateLabel"]').value.trim(),
+        summaryText: card.querySelector('[data-field="summary"]').value.trim(),
+      }))
+    );
+    setFriendlyQuickHighlights(
+      collectFromCards('friendly-highlight-list', (card) => ({
+        title: card.querySelector('[data-field="title"]').value.trim(),
+        bodyText: card.querySelector('[data-field="body"]').value.trim(),
+      }))
+    );
+    setFriendlyCompetencies(
+      collectFromCards('friendly-competency-list', (card) => ({
+        kicker: card.querySelector('[data-field="kicker"]').value.trim(),
+        subtle: card.querySelector('[data-field="subtle"]').value.trim(),
+      }))
+    );
+    setFriendlyCompletedCerts(
+      collectFromCards('friendly-cert-completed-list', (card) => ({
+        text: card.querySelector('[data-field="text"]').value.trim(),
+        date: card.querySelector('[data-field="date"]').value.trim(),
+        note: card.querySelector('[data-field="note"]').value.trim(),
+      }))
+    );
+    setFriendlyProgressCerts(
+      collectFromCards('friendly-cert-progress-list', (card) => ({
+        text: card.querySelector('[data-field="text"]').value.trim(),
+        date: card.querySelector('[data-field="date"]').value.trim(),
+        note: card.querySelector('[data-field="note"]').value.trim(),
+      }))
+    );
     setFriendlySchools(
       collectFromCards('friendly-school-list', (card) => ({
         name: card.querySelector('[data-field="name"]').value.trim(),
@@ -874,7 +1249,28 @@
         bodyText: card.querySelector('[data-field="body"]').value.trim(),
       }))
     );
+    setFriendlyAchievementCards(
+      collectFromCards('friendly-achievement-card-list', (card) => ({
+        title: card.querySelector('[data-field="title"]').value.trim(),
+        meta: card.querySelector('[data-field="meta"]').value.trim(),
+        bodyText: card.querySelector('[data-field="body"]').value.trim(),
+      }))
+    );
     syncFriendlyTextFields();
+    setTextarea('theme-json-field', {
+      accent: document.getElementById('friendly-theme-accent')?.value?.trim() || '',
+      accent2: document.getElementById('friendly-theme-accent2')?.value?.trim() || '',
+      bg: document.getElementById('friendly-theme-bg')?.value?.trim() || '',
+      surface: document.getElementById('friendly-theme-surface')?.value?.trim() || '',
+      surface2: document.getElementById('friendly-theme-surface2')?.value?.trim() || '',
+      text: document.getElementById('friendly-theme-text')?.value?.trim() || '',
+      muted: document.getElementById('friendly-theme-muted')?.value?.trim() || '',
+      border: document.getElementById('friendly-theme-border')?.value?.trim() || '',
+      timelineRole: document.getElementById('friendly-theme-timeline-role')?.value?.trim() || '',
+      timelineProject: document.getElementById('friendly-theme-timeline-project')?.value?.trim() || '',
+      timelineEvent: document.getElementById('friendly-theme-timeline-event')?.value?.trim() || '',
+      timelineLine: document.getElementById('friendly-theme-timeline-line')?.value?.trim() || '',
+    });
   }
 
   async function publishAllFromEditor() {
@@ -890,20 +1286,43 @@
     if (!window.CmsApi?.firebaseConfigured?.()) return;
 
     await fillFormFromFirebase();
+    if (editorLooksEmpty()) {
+      await loadStaticSiteIntoEditor();
+    } else {
+      await hydrateMissingEditorSectionsFromStatic();
+    }
+    const openAdminTab = bindAdminTabs();
     renderFriendlyEditors();
 
     const msg = document.getElementById('admin-message');
     const loadBtn = document.getElementById('load-static-cms-btn');
     const publishAllBtn = document.getElementById('publish-all-firestore-btn');
     const saveBtn = document.getElementById('save-blocks');
+    const openLinksBtn = document.getElementById('open-links-tab-btn');
+    const openMediaBtn = document.getElementById('open-media-tab-btn');
 
     window.syncFriendlyCmsEditors = syncFriendlyEditorsToJson;
+
+    if (openLinksBtn && !openLinksBtn.dataset.bound) {
+      openLinksBtn.dataset.bound = '1';
+      openLinksBtn.addEventListener('click', () => openAdminTab('media'));
+    }
+    if (openMediaBtn && !openMediaBtn.dataset.bound) {
+      openMediaBtn.dataset.bound = '1';
+      openMediaBtn.addEventListener('click', () => openAdminTab('media'));
+    }
 
     [
       ['friendly-add-project', getFriendlyProjects, setFriendlyProjects, { title: '', slug: '', dateLine: '', category: 'software', summaryText: '', detailText: '', chips: '', media: '' }],
       ['friendly-add-event', getFriendlyEvents, setFriendlyEvents, { title: '', slug: '', dateLine: '', bucket: 'professional', summaryText: '', detailText: '', chips: '', media: '' }],
       ['friendly-add-experience', getFriendlyExperience, setFriendlyExperience, { title: '', slug: '', dateLine: '', section: 'professional', meta: '', bullets: [], chips: '' }],
+      ['friendly-add-role', getFriendlyRoles, setFriendlyRoles, { title: '', slug: '', timelineDateLabel: '', summaryText: '' }],
+      ['friendly-add-highlight', getFriendlyQuickHighlights, setFriendlyQuickHighlights, { title: '', bodyText: '' }],
+      ['friendly-add-competency', getFriendlyCompetencies, setFriendlyCompetencies, { kicker: '', subtle: '' }],
+      ['friendly-add-cert-completed', getFriendlyCompletedCerts, setFriendlyCompletedCerts, { text: '', date: '', note: '' }],
+      ['friendly-add-cert-progress', getFriendlyProgressCerts, setFriendlyProgressCerts, { text: '', date: '', note: '' }],
       ['friendly-add-school', getFriendlySchools, setFriendlySchools, { name: '', subtitle: '', categories: '', noteText: '' }],
+      ['friendly-add-achievement-card', getFriendlyAchievementCards, setFriendlyAchievementCards, { title: '', meta: '', bodyText: '' }],
       ['friendly-add-contact-action', getFriendlyContactActions, setFriendlyContactActions, { label: '', href: '', variant: 'ghost', external: false }],
       ['friendly-add-contact-card', getFriendlyContactCards, setFriendlyContactCards, { title: '', bodyText: '' }],
     ].forEach(([id, getter, setter, template]) => {

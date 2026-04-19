@@ -32,8 +32,8 @@
       <div class="actions">
         <button id="load-static-cms-btn" class="btn ghost" type="button">Load Current Site Into CMS</button>
         <button id="publish-all-firestore-btn" class="btn ghost" type="button">Publish All To Realtime DB</button>
-        <button id="add-link" class="btn ghost" type="button">Add Verification Link</button>
-        <button id="add-media" class="btn ghost" type="button">Add Media</button>
+        <button id="open-links-tab-btn" class="btn ghost" type="button">Verification Links</button>
+        <button id="open-media-tab-btn" class="btn ghost" type="button">Media Manager</button>
         <button id="save-blocks" class="btn primary" type="button">Save Changes</button>
         <button id="logout-btn" class="btn ghost" type="button">Logout</button>
       </div>
@@ -44,180 +44,276 @@
     </section>
 
     <section class="section panel reveal">
-      <h2 class="page-title">Friendly Editors</h2>
-      <p class="subtle">Use these forms for the common sections. They write the matching database JSON for you. The raw JSON fields stay below as an advanced fallback.</p>
-      <div class="grid-2 admin-friendly-grid">
-        <article class="card">
-          <h3>Page Copy</h3>
-          <div class="form-grid">
-            <label>Projects heading<input id="friendly-projects-heading" type="text" /></label>
-            <label>Projects intro<input id="friendly-projects-intro" type="text" /></label>
-            <label>Events heading<input id="friendly-events-heading" type="text" /></label>
-            <label>Events intro<input id="friendly-events-intro" type="text" /></label>
-            <label>Competitions heading<input id="friendly-events-competitions-heading" type="text" /></label>
-            <label>Competitions intro<input id="friendly-events-competitions-intro" type="text" /></label>
-            <label>Experience heading<input id="friendly-experience-heading" type="text" /></label>
-            <label>Experience intro<input id="friendly-experience-intro" type="text" /></label>
-            <label>Professional section heading<input id="friendly-experience-professional-heading" type="text" /></label>
-            <label>Campus section heading<input id="friendly-experience-campus-heading" type="text" /></label>
-            <label>Achievements heading<input id="friendly-achievements-heading" type="text" /></label>
-            <label>Editable blocks heading<input id="friendly-achievements-editable-heading" type="text" /></label>
-          </div>
-        </article>
-        <article class="card">
-          <h3>Contact & Coursework</h3>
-          <div class="form-grid">
-            <label>Contact heading<input id="friendly-contact-heading" type="text" /></label>
-            <label class="full">Contact intro<textarea id="friendly-contact-intro" rows="3"></textarea></label>
-            <label>Coursework heading<input id="friendly-coursework-heading" type="text" /></label>
-            <label>Coursework subtitle<input id="friendly-coursework-subtitle" type="text" /></label>
-            <label class="full">Coursework note<textarea id="friendly-coursework-note" rows="4"></textarea></label>
-          </div>
-          <div class="actions"><button id="friendly-add-school" class="btn ghost" type="button">Add School</button></div>
-          <div id="friendly-school-list" class="stack admin-editor-list"></div>
-        </article>
+      <h2 class="page-title">Page Editor</h2>
+      <p class="subtle">Choose a page below. Every tab uses fill-in blocks only, so you can add, edit, or remove items without touching JSON.</p>
+
+      <div class="admin-tabs" role="tablist" aria-label="Admin pages">
+        <button class="admin-tab is-active" type="button" role="tab" aria-selected="true" data-admin-tab="home">Home</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="projects">Projects</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="events">Events</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="timeline">Timeline</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="experience">Experience</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="coursework">Coursework</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="achievements">Achievements</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="contact">Contact</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="design">Design</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="media">Links & Media</button>
+        <button class="admin-tab" type="button" role="tab" aria-selected="false" data-admin-tab="analytics">Analytics</button>
       </div>
-      <div class="actions">
-        <button id="friendly-add-project" class="btn ghost" type="button">Add Project</button>
-        <button id="friendly-add-event" class="btn ghost" type="button">Add Event</button>
-        <button id="friendly-add-experience" class="btn ghost" type="button">Add Experience</button>
-        <button id="friendly-add-contact-action" class="btn ghost" type="button">Add Contact Button</button>
-        <button id="friendly-add-contact-card" class="btn ghost" type="button">Add Contact Card</button>
-      </div>
-      <div class="grid-2 admin-friendly-grid">
-        <section class="panel">
-          <h3>Projects</h3>
-          <div id="friendly-project-list" class="stack admin-editor-list"></div>
-        </section>
-        <section class="panel">
-          <h3>Events</h3>
-          <div id="friendly-event-list" class="stack admin-editor-list"></div>
-        </section>
-        <section class="panel">
-          <h3>Experience</h3>
-          <div id="friendly-experience-list" class="stack admin-editor-list"></div>
-        </section>
-        <section class="panel">
-          <h3>Contact Buttons & Cards</h3>
-          <div id="friendly-contact-action-list" class="stack admin-editor-list"></div>
-          <div id="friendly-contact-card-list" class="stack admin-editor-list section"></div>
-        </section>
-      </div>
+
+      <section class="admin-tab-panel is-active" role="tabpanel" data-admin-panel="home">
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Home Page Copy</h3>
+            <div class="form-grid">
+              <label>Eyebrow<input id="friendly-home-eyebrow" type="text" /></label>
+              <label>Title<input id="friendly-home-title" type="text" /></label>
+              <label class="full">Lead<textarea id="friendly-home-lead" rows="3"></textarea></label>
+              <label class="full">Summary<textarea id="friendly-home-summary" rows="5"></textarea></label>
+            </div>
+          </article>
+          <article class="card">
+            <h3>Resume</h3>
+            <div class="form-grid">
+              <label class="full">Resume file URL
+                <input id="resume-url-field" type="url" placeholder="https://… or ./resume.pdf" />
+              </label>
+              <label class="full">Upload PDF to Firebase Storage
+                <input id="resume-file-input" type="file" accept="application/pdf" />
+              </label>
+              <button id="resume-upload-btn" class="btn ghost" type="button">Upload Resume PDF</button>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-highlight" class="btn ghost" type="button">Add Highlight</button></div>
+            <h3>Highlights</h3>
+            <div id="friendly-highlight-list" class="stack admin-editor-list"></div>
+          </section>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-competency" class="btn ghost" type="button">Add Competency</button></div>
+            <h3>Competencies</h3>
+            <div id="friendly-competency-list" class="stack admin-editor-list"></div>
+          </section>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-cert-completed" class="btn ghost" type="button">Add Completed Cert</button></div>
+            <h3>Completed Certifications</h3>
+            <div id="friendly-cert-completed-list" class="stack admin-editor-list"></div>
+          </section>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-cert-progress" class="btn ghost" type="button">Add In-Progress Cert</button></div>
+            <h3>In-Progress Certifications</h3>
+            <div id="friendly-cert-progress-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="projects" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Projects Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-projects-heading" type="text" /></label>
+              <label>Intro<input id="friendly-projects-intro" type="text" /></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-project" class="btn ghost" type="button">Add Project</button></div>
+            <h3>Edit Projects</h3>
+            <div id="friendly-project-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="events" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Events Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-events-heading" type="text" /></label>
+              <label>Intro<input id="friendly-events-intro" type="text" /></label>
+              <label>Competitions heading<input id="friendly-events-competitions-heading" type="text" /></label>
+              <label>Competitions intro<input id="friendly-events-competitions-intro" type="text" /></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-event" class="btn ghost" type="button">Add Event</button></div>
+            <h3>Edit Events</h3>
+            <div id="friendly-event-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="timeline" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Timeline Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-timeline-heading" type="text" /></label>
+              <label>Intro<input id="friendly-timeline-intro" type="text" /></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-role" class="btn ghost" type="button">Add Timeline Role</button></div>
+            <h3>Edit Timeline Roles</h3>
+            <div id="friendly-role-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="experience" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Experience Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-experience-heading" type="text" /></label>
+              <label>Intro<input id="friendly-experience-intro" type="text" /></label>
+              <label>Professional section heading<input id="friendly-experience-professional-heading" type="text" /></label>
+              <label>Campus section heading<input id="friendly-experience-campus-heading" type="text" /></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-experience" class="btn ghost" type="button">Add Experience</button></div>
+            <h3>Edit Experience</h3>
+            <div id="friendly-experience-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="coursework" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Coursework Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-coursework-heading" type="text" /></label>
+              <label>Subtitle<input id="friendly-coursework-subtitle" type="text" /></label>
+              <label class="full">Coursework note<textarea id="friendly-coursework-note" rows="4"></textarea></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-school" class="btn ghost" type="button">Add School</button></div>
+            <h3>Edit Schools and Courses</h3>
+            <div id="friendly-school-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="achievements" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Achievements Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-achievements-heading" type="text" /></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-achievement-card" class="btn ghost" type="button">Add Achievement Card</button></div>
+            <h3>Edit Achievement Cards</h3>
+            <div id="friendly-achievement-card-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="contact" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <article class="card">
+            <h3>Contact Page Copy</h3>
+            <div class="form-grid">
+              <label>Heading<input id="friendly-contact-heading" type="text" /></label>
+              <label class="full">Intro<textarea id="friendly-contact-intro" rows="4"></textarea></label>
+            </div>
+          </article>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-contact-action" class="btn ghost" type="button">Add Contact Button</button></div>
+            <h3>Edit Contact Buttons</h3>
+            <div id="friendly-contact-action-list" class="stack admin-editor-list"></div>
+          </section>
+          <section class="panel">
+            <div class="actions"><button id="friendly-add-contact-card" class="btn ghost" type="button">Add Contact Card</button></div>
+            <h3>Edit Contact Cards</h3>
+            <div id="friendly-contact-card-list" class="stack admin-editor-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="design" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <section class="panel">
+            <h3>Theme Colors</h3>
+            <div class="form-grid">
+              <label>Accent<input id="friendly-theme-accent" type="text" placeholder="#9ad88d" /></label>
+              <label>Accent 2<input id="friendly-theme-accent2" type="text" placeholder="#74b96a" /></label>
+              <label>Background<input id="friendly-theme-bg" type="text" placeholder="#070a08" /></label>
+              <label>Surface<input id="friendly-theme-surface" type="text" placeholder="#101611" /></label>
+              <label>Surface 2<input id="friendly-theme-surface2" type="text" placeholder="#161f18" /></label>
+              <label>Text<input id="friendly-theme-text" type="text" placeholder="#d8e1d7" /></label>
+              <label>Muted<input id="friendly-theme-muted" type="text" placeholder="#9ca89b" /></label>
+              <label>Border<input id="friendly-theme-border" type="text" placeholder="#273528" /></label>
+              <label>Timeline Role<input id="friendly-theme-timeline-role" type="text" placeholder="#e05a5a" /></label>
+              <label>Timeline Project<input id="friendly-theme-timeline-project" type="text" placeholder="#5ea8e0" /></label>
+              <label>Timeline Event<input id="friendly-theme-timeline-event" type="text" placeholder="#d8c167" /></label>
+              <label>Timeline Line<input id="friendly-theme-timeline-line" type="text" placeholder="#35503a" /></label>
+            </div>
+          </section>
+          <section class="panel">
+            <h3>Page Settings</h3>
+            <p class="subtle">Choose pages that should use Cyber Red theme and icon styles. Accessibility overrides still win for each user session.</p>
+            <div id="red-pages-list" class="settings-grid"></div>
+            <label class="settings-checkbox"><input id="timeline-hide-projects" type="checkbox" /> <span>Hide project items on timeline for this browser session</span></label>
+            <p class="subtle section">Choose icon style per page.</p>
+            <div id="icon-style-list" class="settings-grid"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="media" hidden>
+        <div class="grid-2 admin-friendly-grid">
+          <section class="panel">
+            <div class="actions"><button id="add-link" class="btn ghost" type="button">Add Verification Link</button></div>
+            <h3>Verification Links</h3>
+            <p class="subtle">Links auto-render on matching project, event, and hackathon cards.</p>
+            <div id="link-editor-list" class="stack"></div>
+          </section>
+          <section class="panel">
+            <div class="actions"><button id="add-media" class="btn ghost" type="button">Add Media</button></div>
+            <h3>Media Manager</h3>
+            <p class="subtle">Images, videos, and links auto-populate on matching targets across the site.</p>
+            <div id="media-editor-list" class="stack"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="admin-tab-panel" role="tabpanel" data-admin-panel="analytics" hidden>
+        <div class="grid-3">
+          <article class="card"><h3>Total Visits (Local)</h3><p id="metric-local-total">0</p></article>
+          <article class="card"><h3>Total Visits (Global)</h3><p id="metric-global-total">Unavailable</p></article>
+          <article class="card"><h3>Last Visit</h3><p id="metric-last-visit">N/A</p></article>
+        </div>
+        <article class="card section"><h3>Page Views</h3><ul id="metric-pages"></ul></article>
+        <div class="actions"><button id="reset-metrics-btn" class="btn ghost" type="button">Reset Analytics Counter</button></div>
+      </section>
     </section>
 
-    <section class="section panel reveal">
-      <h2 class="page-title">Site theme & page content (JSON → Save Changes)</h2>
-      <p class="subtle">Valid JSON only. Leave blank to skip. Use <strong>Save Changes</strong> to merge into Realtime Database <code>config/site</code>. Editable here includes theme/colors, contact methods and links, coursework schools and notes, page headings/intro copy, achievements headings, and card/summary content.</p>
-      <label class="full">theme (colors: accent, accent2, bg, surface, surface2, text, muted, border, timelineRole, timelineProject, timelineEvent, timelineLine)
-        <textarea id="theme-json-field" class="code-json" rows="6" placeholder='{"accent":"#9ad88d","bg":"#070a08"}'></textarea>
-      </label>
-      <label class="full">homeHero (eyebrow, titleHtml, lead, optional actionsHtml)
-        <textarea id="home-hero-json-field" class="code-json" rows="5" placeholder="{}"></textarea>
-      </label>
-      <label class="full">quickHighlights (array of { title, body or bodyHtml })
-        <textarea id="quick-highlights-json-field" class="code-json" rows="6" placeholder="[]"></textarea>
-      </label>
-      <label class="full">certifications { completed: [{ text, date|issued|earned?, expires?, note? }], inProgress: [{ text, expected?, date?, expires?, note? }] } — strings still work for plain titles
-        <textarea id="certifications-json-field" class="code-json" rows="8" placeholder="{}"></textarea>
-      </label>
-      <label class="full">competencies [{ kicker, subtle }]
-        <textarea id="competencies-json-field" class="code-json" rows="8" placeholder="[]"></textarea>
-      </label>
-      <label class="full">contactPage { heading, introHtml, actions:[{label,href,variant,external}], cards:[{title,bodyHtml}] }
-        <textarea id="contact-page-json-field" class="code-json" rows="10" placeholder="{}"></textarea>
-      </label>
-      <label class="full">courseworkPage — legacy: { panelTitle, panelSubtitle, categories:[{ title, items:[&quot;CTIS 210 - …&quot; or { code, name }] }], noteHtml } — multiple schools: add institutions:[{ name, subtitle?, categories:[…], noteHtml? }]
-        <textarea id="coursework-page-json-field" class="code-json" rows="14" placeholder="{}"></textarea>
-      </label>
-      <label class="full">projectsPage { heading, intro }
-        <textarea id="projects-page-json-field" class="code-json" rows="4" placeholder="{}"></textarea>
-      </label>
-      <label class="full">eventsPage { heading, intro, competitionsHeading, competitionsIntro }
-        <textarea id="events-page-json-field" class="code-json" rows="5" placeholder="{}"></textarea>
-      </label>
-      <label class="full">timelinePage { heading, intro }
-        <textarea id="timeline-page-json-field" class="code-json" rows="4" placeholder="{}"></textarea>
-      </label>
-      <label class="full">experiencePage { heading, intro, professionalHeading, campusHeading }
-        <textarea id="experience-page-json-field" class="code-json" rows="5" placeholder="{}"></textarea>
-      </label>
-      <label class="full">achievementsPage { heading, intro, editableHeading, editableIntro }
-        <textarea id="achievements-page-json-field" class="code-json" rows="5" placeholder="{}"></textarea>
-      </label>
-      <label class="full">achievementCards [{ title, meta, body or bodyHtml }]
-        <textarea id="achievement-cards-json-field" class="code-json" rows="8" placeholder="[]"></textarea>
-      </label>
-      <p class="subtle">Covers: <strong>Experience</strong>, <strong>Academic Coursework</strong>, <strong>Coursework Note</strong>, <strong>schools</strong>, <strong>Key Projects & Technical Work</strong>, <strong>Professional Events & Networking</strong>, <strong>Capture The Flags & Hackathons Attended</strong>, <strong>Achievements & Recognition</strong>, and <strong>Interested in collaborating?</strong></p>
-    </section>
-
-    <section class="section panel reveal">
-      <h2 class="page-title">Resume & Home Page (Firebase)</h2>
-      <p class="subtle">Resume URL updates download buttons site-wide. Home summary replaces the Professional Summary section on the home page (HTML).</p>
-      <div class="form-grid">
-        <label class="full">Resume file URL (or upload a PDF below)
-          <input id="resume-url-field" type="url" placeholder="https://… or ./resume.pdf" />
-        </label>
-        <label class="full">Upload PDF to Firebase Storage (fills URL above — then Save Changes)
-          <input id="resume-file-input" type="file" accept="application/pdf" />
-        </label>
-        <button id="resume-upload-btn" class="btn ghost" type="button">Upload resume PDF</button>
-        <label class="full">Home page summary HTML (optional)
-          <textarea id="home-summary-html-field" rows="6" placeholder="&lt;p&gt;…&lt;/p&gt;"></textarea>
-        </label>
-      </div>
-    </section>
-
-    <section class="section panel reveal">
-      <h2 class="page-title">Projects, Events & Timeline (Realtime Database)</h2>
-      <p class="subtle">Edit JSON arrays, then <strong>Publish collections to Realtime Database</strong>. The live GitHub Pages site subscribes to these paths and updates Projects, Events, and Timeline together without a redeploy. Until you publish at least one project/event/role, the static HTML fallback stays visible.</p>
-      <p class="subtle">Use <strong>Load Current Site Into CMS</strong> first to convert the existing static pages into these Realtime Database collections without manual copy/paste. Then use <strong>Publish All To Realtime DB</strong> or publish collections separately.</p>
+    <section class="admin-hidden-json" aria-hidden="true" hidden>
       <div id="cms-json-help" class="subtle section"></div>
-      <label class="full">site_projects (JSON array)
-        <textarea id="bulk-projects-json" rows="10" class="code-json" placeholder="[]"></textarea>
-      </label>
-      <label class="full">site_events (JSON array)
-        <textarea id="bulk-events-json" rows="10" class="code-json" placeholder="[]"></textarea>
-      </label>
-      <label class="full">site_roles (JSON array — timeline “role” rows)
-        <textarea id="bulk-roles-json" rows="8" class="code-json" placeholder="[]"></textarea>
-      </label>
-      <label class="full">site_experience (JSON array — Experience page; section: professional | campus; orderIndex; timeline fields optional)
-        <textarea id="bulk-experience-json" rows="10" class="code-json" placeholder="[]"></textarea>
-      </label>
-      <div class="actions">
-        <button id="publish-collections-btn" class="btn primary" type="button">Publish collections to Realtime DB</button>
-      </div>
-    </section>
-
-    <section class="section panel reveal">
-      <h2 class="page-title">Theme & Timeline Settings</h2>
-      <p class="subtle">Choose pages that should use Cyber Red theme and optionally hide project entries on timeline.</p>
-      <div id="red-pages-list" class="settings-grid"></div>
-      <label class="settings-checkbox"><input id="timeline-hide-projects" type="checkbox" /> <span>Hide project items on timeline for this user/browser</span></label>
-      <p class="subtle section">Choose icon style per page.</p>
-      <div id="icon-style-list" class="settings-grid"></div>
-    </section>
-
-    <section class="section panel reveal">
-      <h2 class="page-title">Visitor Analytics</h2>
-      <div class="grid-3">
-        <article class="card"><h3>Total Visits (Local)</h3><p id="metric-local-total">0</p></article>
-        <article class="card"><h3>Total Visits (Global)</h3><p id="metric-global-total">Unavailable</p></article>
-        <article class="card"><h3>Last Visit</h3><p id="metric-last-visit">N/A</p></article>
-      </div>
-      <article class="card section"><h3>Page Views</h3><ul id="metric-pages"></ul></article>
-      <div class="actions"><button id="reset-metrics-btn" class="btn ghost" type="button">Reset Analytics Counter</button></div>
-    </section>
-    <section class="section panel reveal">
-      <h2 class="page-title">Verification Links (Projects/Hackathons/Events)</h2>
-      <p class="subtle">Supports external URLs and proof links that auto-render on matching cards/timeline items.</p>
-      <div id="link-editor-list" class="stack"></div>
-    </section>
-
-    <section class="section panel reveal">
-      <h2 class="page-title">Media Manager</h2>
-      <p class="subtle">Upload/delete images/videos and add YouTube/external links. Media auto-populates on matching targets across pages.</p>
-      <div id="media-editor-list" class="stack"></div>
+      <textarea id="theme-json-field" class="code-json" rows="6"></textarea>
+      <textarea id="home-hero-json-field" class="code-json" rows="5"></textarea>
+      <textarea id="quick-highlights-json-field" class="code-json" rows="6"></textarea>
+      <textarea id="certifications-json-field" class="code-json" rows="8"></textarea>
+      <textarea id="competencies-json-field" class="code-json" rows="8"></textarea>
+      <textarea id="contact-page-json-field" class="code-json" rows="10"></textarea>
+      <textarea id="coursework-page-json-field" class="code-json" rows="14"></textarea>
+      <textarea id="projects-page-json-field" class="code-json" rows="4"></textarea>
+      <textarea id="events-page-json-field" class="code-json" rows="5"></textarea>
+      <textarea id="timeline-page-json-field" class="code-json" rows="4"></textarea>
+      <textarea id="experience-page-json-field" class="code-json" rows="5"></textarea>
+      <textarea id="achievements-page-json-field" class="code-json" rows="5"></textarea>
+      <textarea id="achievement-cards-json-field" class="code-json" rows="8"></textarea>
+      <textarea id="home-summary-html-field" rows="6"></textarea>
+      <textarea id="bulk-projects-json" rows="10" class="code-json"></textarea>
+      <textarea id="bulk-events-json" rows="10" class="code-json"></textarea>
+      <textarea id="bulk-roles-json" rows="8" class="code-json"></textarea>
+      <textarea id="bulk-experience-json" rows="10" class="code-json"></textarea>
+      <button id="publish-collections-btn" class="btn primary" type="button">Publish collections to Realtime DB</button>
     </section>
   </main>
 
